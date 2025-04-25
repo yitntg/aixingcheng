@@ -5,6 +5,7 @@
 
 // Airwallex全局对象
 let Airwallex;
+let cardElement; // 存储卡片元素
 
 /**
  * 初始化Airwallex SDK
@@ -26,11 +27,91 @@ function initAirwallex() {
       console.log('Airwallex SDK初始化成功');
       // 触发初始化成功事件
       document.dispatchEvent(new CustomEvent('airwallex-ready'));
+      
+      // 初始化表单字段
+      initializeFormFields();
     }).catch(error => {
       console.error('Airwallex SDK初始化失败:', error);
     });
   } else {
     console.error('无法加载Airwallex SDK，请确保script标签正确引入');
+  }
+}
+
+/**
+ * 初始化信用卡表单字段
+ */
+function initializeFormFields() {
+  if (!Airwallex) {
+    console.error('Airwallex未初始化，无法创建表单字段');
+    return;
+  }
+  
+  try {
+    console.log('初始化信用卡表单字段...');
+    
+    // 创建卡号字段
+    const cardNumber = Airwallex.createElement('cardNumber', {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#4d5461',
+          '::placeholder': {
+            color: '#737791',
+          },
+        },
+        invalid: {
+          color: '#f87171',
+        },
+      },
+    });
+    cardNumber.mount('card-number-element');
+    
+    // 创建有效期字段
+    const cardExpiry = Airwallex.createElement('expiry', {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#4d5461',
+          '::placeholder': {
+            color: '#737791',
+          },
+        },
+        invalid: {
+          color: '#f87171',
+        },
+      },
+    });
+    cardExpiry.mount('card-expiry-element');
+    
+    // 创建CVC安全码字段
+    const cardCvc = Airwallex.createElement('cvc', {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#4d5461',
+          '::placeholder': {
+            color: '#737791',
+          },
+        },
+        invalid: {
+          color: '#f87171',
+        },
+      },
+    });
+    cardCvc.mount('card-cvc-element');
+    
+    // 将所有元素组合为一个卡片对象
+    cardElement = {
+      cardNumber,
+      cardExpiry,
+      cardCvc,
+      type: 'splitForm'
+    };
+    
+    console.log('信用卡表单字段初始化成功');
+  } catch (error) {
+    console.error('创建信用卡表单字段失败:', error);
   }
 }
 
@@ -77,58 +158,13 @@ async function createPaymentIntent(paymentData) {
 }
 
 /**
- * 创建并挂载卡片支付元素
- * 
- * @param {string} elementId - 要挂载的DOM元素ID
- * @param {Object} intent - 支付意图对象
- * @returns {Object} - 卡片元素对象
- */
-function createCardElement(elementId, intent) {
-  // 确保Airwallex已经初始化
-  if (!Airwallex) {
-    console.error('Airwallex未初始化');
-    return null;
-  }
-
-  try {
-    // 创建卡片元素
-    const card = Airwallex.createElement('card', {
-      intent: {
-        id: intent.id,
-        client_secret: intent.client_secret,
-      },
-      style: {
-        base: {
-          fontSize: '16px',
-          color: '#4d5461',
-          '::placeholder': {
-            color: '#737791',
-          },
-        },
-        invalid: {
-          color: '#f87171',
-        },
-      },
-    });
-
-    // 挂载卡片元素
-    card.mount(elementId);
-    return card;
-  } catch (error) {
-    console.error('创建卡片元素失败:', error);
-    return null;
-  }
-}
-
-/**
  * 确认支付
  * 
- * @param {Object} cardElement - 卡片元素对象
  * @param {Object} intent - 支付意图对象
  * @param {Object} customer - 客户信息
  * @returns {Promise} - 支付结果
  */
-async function confirmPayment(cardElement, intent, customer) {
+async function confirmPayment(intent, customer) {
   if (!Airwallex || !cardElement) {
     console.error('Airwallex或卡片元素未初始化');
     return { error: '支付系统未初始化' };
@@ -137,11 +173,11 @@ async function confirmPayment(cardElement, intent, customer) {
   try {
     // 确认支付意图
     const result = await Airwallex.confirmPaymentIntent({
-      element: cardElement,
+      element: cardElement.type === 'splitForm' ? cardElement.cardNumber : cardElement,
       id: intent.id,
       client_secret: intent.client_secret,
       payment_method: {
-        card: cardElement,
+        card: cardElement.type === 'splitForm' ? cardElement.cardNumber : cardElement,
         billing: {
           first_name: customer.firstName,
           last_name: customer.lastName,
@@ -185,24 +221,30 @@ function setupEventListeners() {
     const { paymentData, customer } = event.detail;
     
     try {
+      // 显示处理中
+      if (window.paymentMethods && window.paymentMethods.showSuccess) {
+        window.paymentMethods.showSuccess('正在处理您的支付请求...');
+      }
+      
       // 1. 创建支付意图
       const intent = await createPaymentIntent(paymentData);
       
-      // 2. 创建卡片元素
-      const cardElement = createCardElement('card-element', intent);
+      // 2. 确认支付
+      const result = await confirmPayment(intent, customer);
       
-      // 3. 确认支付
-      const result = await confirmPayment(cardElement, intent, customer);
-      
-      // 4. 处理支付结果
+      // 3. 处理支付结果
       handlePaymentResult(result);
     } catch (error) {
       console.error('支付处理过程中出错:', error);
       // 显示错误信息
-      const errorElement = document.getElementById('error-message');
-      if (errorElement) {
-        errorElement.textContent = '支付处理失败：' + (error.message || '未知错误');
-        errorElement.style.display = 'block';
+      if (window.paymentMethods && window.paymentMethods.showError) {
+        window.paymentMethods.showError('支付处理失败：' + (error.message || '未知错误'));
+      } else {
+        const errorElement = document.getElementById('error-message');
+        if (errorElement) {
+          errorElement.textContent = '支付处理失败：' + (error.message || '未知错误');
+          errorElement.style.display = 'block';
+        }
       }
     }
   });
@@ -218,7 +260,6 @@ document.addEventListener('DOMContentLoaded', function() {
 window.airwallexPayment = {
   init: initAirwallex,
   createPaymentIntent,
-  createCardElement,
   confirmPayment,
   handlePaymentResult
 }; 
