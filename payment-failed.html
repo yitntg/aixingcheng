@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>支付失败 - AI行程高级会员</title>
+  <title>支付失败</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     :root {
@@ -36,39 +36,17 @@
       padding: 0;
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
-    }
-    
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 40px;
-      background-color: var(--card-bg);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-    }
-    
-    .logo {
-      font-size: 24px;
-      font-weight: bold;
-      color: var(--primary-color);
-      text-decoration: none;
-      display: flex;
+      justify-content: center;
       align-items: center;
     }
     
-    .logo i {
-      margin-right: 10px;
+    .container {
+      max-width: 500px;
+      width: 100%;
+      padding: 20px;
     }
     
-    .main-container {
-      max-width: 800px;
-      margin: 60px auto;
-      padding: 0 20px;
-      flex: 1;
-    }
-    
-    .error-card {
+    .failed-card {
       background-color: var(--card-bg);
       border-radius: 16px;
       box-shadow: var(--box-shadow);
@@ -76,7 +54,7 @@
       text-align: center;
     }
     
-    .error-icon {
+    .failed-icon {
       width: 90px;
       height: 90px;
       background-color: rgba(248, 113, 113, 0.1);
@@ -87,19 +65,19 @@
       margin: 0 auto 30px;
     }
     
-    .error-icon i {
+    .failed-icon i {
       font-size: 40px;
       color: var(--danger-color);
     }
     
-    .error-title {
+    .failed-title {
       font-size: 28px;
       font-weight: 700;
       color: var(--dark-text);
       margin-bottom: 15px;
     }
     
-    .error-message {
+    .failed-message {
       font-size: 16px;
       color: var(--light-text);
       margin-bottom: 30px;
@@ -108,7 +86,7 @@
     .error-details {
       margin: 30px 0;
       padding: 25px;
-      background-color: rgba(248, 113, 113, 0.05);
+      background-color: #f9faff;
       border-radius: 12px;
       text-align: left;
     }
@@ -131,7 +109,7 @@
       display: flex;
       justify-content: space-between;
       padding: 12px 0;
-      border-bottom: 1px solid rgba(248, 113, 113, 0.2);
+      border-bottom: 1px solid var(--border-color);
     }
     
     .detail-row:last-child {
@@ -148,17 +126,8 @@
       color: var(--dark-text);
     }
     
-    .action-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      max-width: 400px;
-      margin: 0 auto;
-    }
-    
-    .retry-button {
+    .action-button {
       display: inline-block;
-      width: 100%;
       padding: 15px 30px;
       background-color: var(--primary-color);
       color: white;
@@ -169,164 +138,92 @@
       cursor: pointer;
       text-decoration: none;
       transition: background-color 0.3s, transform 0.2s;
+      margin: 5px;
     }
     
-    .retry-button:hover {
+    .action-button:hover {
       background-color: var(--secondary-color);
       transform: translateY(-2px);
     }
     
-    .back-button {
-      display: inline-block;
-      width: 100%;
-      padding: 15px 30px;
-      background-color: #e2e8f0;
-      color: var(--text-color);
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background-color 0.3s, transform 0.2s;
-    }
-    
-    .back-button:hover {
-      background-color: #d1d9e6;
-      transform: translateY(-2px);
-    }
-    
-    .button-icon {
+    .action-button i {
       margin-right: 8px;
     }
     
-    .help-text {
+    .footer {
+      text-align: center;
       margin-top: 20px;
       font-size: 14px;
       color: var(--light-text);
     }
-    
-    .help-text a {
-      color: var(--primary-color);
-      text-decoration: none;
-      font-weight: 500;
-    }
-    
-    .help-text a:hover {
-      text-decoration: underline;
-    }
-    
-    .footer {
-      background-color: var(--card-bg);
-      padding: 25px 0;
-      text-align: center;
-      border-top: 1px solid var(--border-color);
-      margin-top: auto;
-    }
-    
-    .footer-text {
-      color: var(--light-text);
-      font-size: 14px;
-    }
-    
-    @media (max-width: 768px) {
-      .navbar {
-        padding: 15px 20px;
-      }
-      
-      .error-card {
-        padding: 30px 20px;
-      }
-      
-      .error-title {
-        font-size: 24px;
-      }
-      
-      .action-buttons {
-        flex-direction: column;
-      }
-    }
   </style>
 </head>
 <body>
-  <!-- 导航栏 -->
-  <nav class="navbar">
-    <a href="./index.html" class="logo">
-      <i class="fas fa-globe"></i>
-      AI行程
-    </a>
-  </nav>
-
-  <!-- 主内容 -->
-  <div class="main-container">
-    <div class="error-card">
-      <div class="error-icon">
+  <div class="container">
+    <div class="failed-card">
+      <div class="failed-icon">
         <i class="fas fa-times"></i>
       </div>
       
-      <h1 class="error-title">支付失败</h1>
-      <p class="error-message">很抱歉，处理您的付款时遇到了问题。请检查您的支付信息或稍后再试。</p>
+      <h1 class="failed-title">支付失败</h1>
+      <p class="failed-message">抱歉，您的支付未能完成。请检查支付信息后重试。</p>
       
       <div class="error-details">
         <div class="detail-title">
-          <i class="fas fa-exclamation-triangle"></i>
-          错误详情
-        </div>
-        
-        <div class="detail-row">
-          <span class="detail-label">错误信息</span>
-          <span class="detail-value" id="error-message-text">支付处理失败</span>
+          <i class="fas fa-exclamation-triangle"></i> 错误详情
         </div>
         
         <div class="detail-row">
           <span class="detail-label">错误代码</span>
-          <span class="detail-value" id="error-code">未知</span>
+          <span class="detail-value" id="error-code">-</span>
         </div>
         
         <div class="detail-row">
-          <span class="detail-label">日期</span>
-          <span class="detail-value" id="current-date"></span>
+          <span class="detail-label">错误信息</span>
+          <span class="detail-value" id="error-message">-</span>
+        </div>
+        
+        <div class="detail-row">
+          <span class="detail-label">时间</span>
+          <span class="detail-value" id="error-time">-</span>
         </div>
       </div>
       
-      <div class="action-buttons">
-        <a href="./index.html" class="retry-button">
-          <i class="fas fa-redo button-icon"></i> 重新尝试支付
-        </a>
-        
-        <a href="./index.html" class="back-button">
-          <i class="fas fa-arrow-left button-icon"></i> 返回首页
+      <div>
+        <a href="./index.html" class="action-button">
+          <i class="fas fa-redo"></i> 重新尝试
         </a>
       </div>
-      
-      <p class="help-text">
-        如需帮助，请联系我们的客服团队：<a href="mailto:support@aixingcheng.com">support@aixingcheng.com</a>
-      </p>
+    </div>
+    
+    <div class="footer">
+      &copy; 2025. 保留所有权利.
     </div>
   </div>
   
-  <!-- 页脚 -->
-  <footer class="footer">
-    <p class="footer-text">&copy; 2025 AI行程. 保留所有权利.</p>
-  </footer>
-
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // 显示当前日期
-      document.getElementById('current-date').textContent = new Date().toLocaleDateString('zh-CN');
+      // 获取URL参数
+      const params = new URLSearchParams(window.location.search);
+      const errorMessage = params.get('error_message') || '支付处理过程中出现错误';
+      const errorCode = params.get('error_code') || 'UNKNOWN_ERROR';
       
-      // 从URL参数中获取错误详情（如果有）
-      const urlParams = new URLSearchParams(window.location.search);
-      const errorMsg = urlParams.get('error_message');
-      const errorCode = urlParams.get('error_code');
+      // 设置错误信息
+      document.getElementById('error-message').textContent = errorMessage;
+      document.getElementById('error-code').textContent = errorCode;
       
-      if (errorMsg) {
-        document.getElementById('error-message-text').textContent = errorMsg;
-      }
-      
-      if (errorCode) {
-        document.getElementById('error-code').textContent = errorCode;
-      }
+      // 设置当前时间
+      const now = new Date();
+      const formattedDate = now.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      document.getElementById('error-time').textContent = formattedDate;
     });
   </script>
 </body>

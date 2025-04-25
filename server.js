@@ -10,7 +10,7 @@ const path = require('path');
 
 // 创建Express应用
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Airwallex API配置 - 直接在此文件中配置，避免需要.env文件
 const AIRWALLEX_API = {

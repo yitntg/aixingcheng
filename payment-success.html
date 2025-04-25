@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>支付成功 - AI行程高级会员</title>
+  <title>支付成功</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     :root {
@@ -36,36 +36,14 @@
       padding: 0;
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
-    }
-    
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 40px;
-      background-color: var(--card-bg);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-    }
-    
-    .logo {
-      font-size: 24px;
-      font-weight: bold;
-      color: var(--primary-color);
-      text-decoration: none;
-      display: flex;
+      justify-content: center;
       align-items: center;
     }
     
-    .logo i {
-      margin-right: 10px;
-    }
-    
-    .main-container {
-      max-width: 800px;
-      margin: 60px auto;
-      padding: 0 20px;
-      flex: 1;
+    .container {
+      max-width: 500px;
+      width: 100%;
+      padding: 20px;
     }
     
     .success-card {
@@ -172,86 +150,46 @@
     }
     
     .footer {
-      background-color: var(--card-bg);
-      padding: 25px 0;
       text-align: center;
-      border-top: 1px solid var(--border-color);
-      margin-top: auto;
-    }
-    
-    .footer-text {
-      color: var(--light-text);
+      margin-top: 20px;
       font-size: 14px;
-    }
-    
-    @media (max-width: 768px) {
-      .navbar {
-        padding: 15px 20px;
-      }
-      
-      .success-card {
-        padding: 30px 20px;
-      }
-      
-      .success-title {
-        font-size: 24px;
-      }
+      color: var(--light-text);
     }
   </style>
 </head>
 <body>
-  <!-- 导航栏 -->
-  <nav class="navbar">
-    <a href="./index.html" class="logo">
-      <i class="fas fa-globe"></i>
-      AI行程
-    </a>
-  </nav>
-
-  <!-- 主内容 -->
-  <div class="main-container">
+  <div class="container">
     <div class="success-card">
       <div class="success-icon">
         <i class="fas fa-check"></i>
       </div>
       
       <h1 class="success-title">支付成功</h1>
-      <p class="success-message">感谢您的购买！您的高级会员订阅已激活。</p>
+      <p class="success-message">您的高级会员订阅已激活，感谢您的支持！</p>
       
       <div class="order-details">
         <div class="detail-title">
-          <i class="fas fa-receipt"></i>
-          订单详情
+          <i class="fas fa-receipt"></i> 交易详情
         </div>
         
         <div class="detail-row">
-          <span class="detail-label">订单编号</span>
-          <span class="detail-value" id="transaction-id">TXN123456789</span>
+          <span class="detail-label">交易编号</span>
+          <span class="detail-value" id="transaction-id">-</span>
         </div>
         
         <div class="detail-row">
-          <span class="detail-label">产品</span>
-          <span class="detail-value">AI行程高级会员</span>
-        </div>
-        
-        <div class="detail-row">
-          <span class="detail-label">套餐</span>
-          <span class="detail-value">月度订阅</span>
-        </div>
-        
-        <div class="detail-row">
-          <span class="detail-label">价格</span>
+          <span class="detail-label">支付金额</span>
           <span class="detail-value">¥99.00</span>
         </div>
         
         <div class="detail-row">
-          <span class="detail-label">支付日期</span>
-          <span class="detail-value" id="current-date"></span>
+          <span class="detail-label">支付方式</span>
+          <span class="detail-value" id="payment-method">信用卡</span>
         </div>
         
         <div class="detail-row">
-          <span class="detail-label">下次扣款日期</span>
-          <span class="detail-value" id="next-payment-date"></span>
+          <span class="detail-label">支付时间</span>
+          <span class="detail-value" id="payment-time">-</span>
         </div>
       </div>
       
@@ -259,13 +197,12 @@
         <i class="fas fa-arrow-left"></i> 返回首页
       </a>
     </div>
+    
+    <div class="footer">
+      &copy; 2025. 保留所有权利.
+    </div>
   </div>
   
-  <!-- 页脚 -->
-  <footer class="footer">
-    <p class="footer-text">&copy; 2025 AI行程. 保留所有权利.</p>
-  </footer>
-
   <!-- 使用CDN引入Airwallex JS SDK -->
   <script src="https://checkout.airwallex.com/assets/elements.bundle.min.js"></script>
   
@@ -288,10 +225,6 @@
       } else if (txnId.startsWith('int_')) {
         // Airwallex交易ID格式
         paymentMethod = 'Airwallex支付';
-        
-        // 在实际应用中，这里可以调用Airwallex API获取支付详情
-        // 使用intent_id查询支付详情
-        fetchPaymentDetails(txnId);
       }
       document.getElementById('payment-method').textContent = paymentMethod;
       
@@ -307,25 +240,6 @@
         hour12: false
       });
       document.getElementById('payment-time').textContent = formattedDate;
-      
-      // 发票按钮点击事件
-      document.getElementById('invoice-btn').addEventListener('click', function(e) {
-        e.preventDefault();
-        alert('发票申请功能即将上线，敬请期待！');
-      });
-      
-      /**
-       * 获取Airwallex支付详情
-       * 在实际应用中，这应该通过服务器端进行
-       */
-      function fetchPaymentDetails(intentId) {
-        // 注意：实际生产环境中，这个操作应该在服务器端进行
-        // 客户端不应该直接访问Airwallex API
-        console.log('查询支付详情:', intentId);
-        
-        // 这里我们模拟成功获取了支付详情
-        // 在实际应用中，您应该通过后端API查询Airwallex支付详情
-      }
     });
   </script>
 </body>
