@@ -24,7 +24,7 @@ async function initPaymentModule() {
     
     // 创建支付意向
     paymentIntent = await createPaymentIntent({
-      amount: 99.00,
+      amount: 0.1, // 修改为0.1元用于测试
       currency: 'CNY',
       description: 'AI行程规划会员月度订阅'
     });
@@ -127,7 +127,7 @@ function bindPaymentFormSubmission() {
       
       // 恢复支付按钮状态
       paymentButton.disabled = false;
-      paymentButton.textContent = '确认支付 ¥99.00';
+      paymentButton.textContent = '确认支付 ¥0.10';
     }
   });
 }
@@ -250,7 +250,7 @@ async function handleWechatPayment() {
     // 恢复支付按钮状态
     const paymentButton = document.getElementById('payment-button');
     paymentButton.disabled = false;
-    paymentButton.textContent = '确认支付 ¥99.00';
+    paymentButton.textContent = '确认支付 ¥0.10';
   } else {
     throw new Error(result.error || '微信支付二维码生成失败，请重试');
   }

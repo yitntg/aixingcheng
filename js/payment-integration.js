@@ -8,7 +8,7 @@ const config = {
   origin: window.location.origin,
   locale: 'zh',
   currency: 'CNY',
-  amount: 99.00, // 订阅金额
+  amount: 0.1, // 订阅金额 - 修改为0.1元用于测试
 }
 
 // Airwallex实例

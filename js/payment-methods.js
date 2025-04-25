@@ -83,7 +83,7 @@ function updatePaymentButtonText() {
   
   switch (currentPaymentMethod) {
     case 'card':
-      paymentButton.textContent = '确认支付 ¥99.00';
+      paymentButton.textContent = '确认支付 ¥0.10';
       break;
     case 'alipay':
       paymentButton.textContent = '使用支付宝支付';
