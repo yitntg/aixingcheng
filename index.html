@@ -4,9 +4,117 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Airwallex支付示例</title>
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="./css/style.css">
   <!-- Airwallex SDK -->
   <script src="https://checkout.airwallex.com/assets/elements.bundle.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f8f9fa;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #2c3e50;
+    }
+    
+    h2 {
+      margin-bottom: 15px;
+      color: #3498db;
+    }
+    
+    .product-details, .payment-form {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #eee;
+      border-radius: 5px;
+    }
+    
+    .payment-button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background-color 0.3s;
+    }
+    
+    .payment-button:hover {
+      background-color: #2980b9;
+    }
+    
+    .error-message {
+      color: #e74c3c;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    
+    #card-element {
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      min-height: 100px;
+    }
+    
+    .test-options {
+      margin-top: 30px; 
+      padding: 15px; 
+      background-color: #f0f8ff; 
+      border-radius: 5px; 
+      border: 1px solid #d0e0ff;
+    }
+    
+    .test-buttons {
+      display: flex; 
+      gap: 10px; 
+      margin-top: 10px;
+    }
+    
+    .success-button {
+      flex: 1; 
+      padding: 8px; 
+      background: #2ecc71; 
+      color: white; 
+      text-align: center; 
+      text-decoration: none; 
+      border-radius: 4px;
+    }
+    
+    .fail-button {
+      flex: 1; 
+      padding: 8px; 
+      background: #e74c3c; 
+      color: white; 
+      text-align: center; 
+      text-decoration: none; 
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -40,7 +148,7 @@
       </div>
     </div>
     
-    <div class="test-options" style="margin-top: 30px; padding: 15px; background-color: #f0f8ff; border-radius: 5px; border: 1px solid #d0e0ff;">
+    <div class="test-options">
       <h3>测试选项</h3>
       <p>为测试不同的支付结果，您可以使用以下卡号：</p>
       <ul style="margin-left: 20px; line-height: 1.8;">
@@ -49,14 +157,45 @@
         <li><strong>支付失败:</strong> 4000 0000 0000 0101</li>
       </ul>
       <p>点击按钮直接查看结果页面:</p>
-      <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <a href="payment-success.html?txn_id=TEST123456789" style="flex: 1; padding: 8px; background: #2ecc71; color: white; text-align: center; text-decoration: none; border-radius: 4px;">查看成功页面</a>
-        <a href="payment-failed.html?error_message=测试失败&error_code=TEST_ERROR" style="flex: 1; padding: 8px; background: #e74c3c; color: white; text-align: center; text-decoration: none; border-radius: 4px;">查看失败页面</a>
+      <div class="test-buttons">
+        <a href="./payment-success.html?txn_id=TEST123456789" class="success-button">查看成功页面</a>
+        <a href="./payment-failed.html?error_message=测试失败&error_code=TEST_ERROR" class="fail-button">查看失败页面</a>
       </div>
+      <p style="margin-top: 15px;"><a href="./test.html">查看测试页面</a></p>
     </div>
   </div>
 
-  <!-- 引入支付处理脚本 -->
-  <script src="js/payment.js"></script>
+  <!-- 内联脚本替代 payment.js -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const paymentButton = document.getElementById('payment-button');
+      
+      if (paymentButton) {
+        paymentButton.addEventListener('click', function() {
+          // 模拟支付过程
+          showError('正在处理支付...');
+          
+          // 随机选择成功或失败结果
+          const isSuccess = Math.random() > 0.5;
+          
+          setTimeout(() => {
+            if (isSuccess) {
+              window.location.href = './payment-success.html?txn_id=SIM' + Math.floor(Math.random() * 1000000);
+            } else {
+              window.location.href = './payment-failed.html?error_message=模拟支付失败&error_code=TEST_ERROR_' + Math.floor(Math.random() * 100);
+            }
+          }, 1500);
+        });
+      }
+      
+      function showError(message) {
+        const errorElement = document.getElementById('error-message');
+        if (errorElement) {
+          errorElement.textContent = message;
+          errorElement.style.display = 'block';
+        }
+      }
+    });
+  </script>
 </body>
 </html> 
