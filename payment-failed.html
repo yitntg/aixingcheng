@@ -3,83 +3,331 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>支付失败 - Airwallex支付示例</title>
-  <link rel="stylesheet" href="./css/style.css">
+  <title>支付失败 - AI行程高级会员</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
-    .error-icon {
-      text-align: center;
-      font-size: 80px;
-      color: #e74c3c;
-      margin: 20px 0;
+    :root {
+      --primary-color: #4a6cf7;
+      --secondary-color: #6b7cff;
+      --accent-color: #00d9bf;
+      --text-color: #4d5461;
+      --light-text: #737791;
+      --dark-text: #212b36;
+      --border-color: #e7eaf4;
+      --success-color: #34d399;
+      --danger-color: #f87171;
+      --warning-color: #fbbf24;
+      --bg-color: #f9faff;
+      --card-bg: #ffffff;
+      --box-shadow: 0 15px 40px rgba(58, 65, 111, 0.07);
     }
-    .error-message {
-      text-align: center;
-      margin-bottom: 30px;
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-    .try-again-button {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      background-color: #3498db;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-      cursor: pointer;
-      text-align: center;
+    
+    body {
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      line-height: 1.6;
+      color: var(--text-color);
+      background-color: var(--bg-color);
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      background-color: var(--card-bg);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    }
+    
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary-color);
       text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+    
+    .logo i {
+      margin-right: 10px;
+    }
+    
+    .main-container {
+      max-width: 800px;
+      margin: 60px auto;
+      padding: 0 20px;
+      flex: 1;
+    }
+    
+    .error-card {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: var(--box-shadow);
+      padding: 40px;
+      text-align: center;
+    }
+    
+    .error-icon {
+      width: 90px;
+      height: 90px;
+      background-color: rgba(248, 113, 113, 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 30px;
+    }
+    
+    .error-icon i {
+      font-size: 40px;
+      color: var(--danger-color);
+    }
+    
+    .error-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--dark-text);
       margin-bottom: 15px;
     }
-    .try-again-button:hover {
-      background-color: #2980b9;
+    
+    .error-message {
+      font-size: 16px;
+      color: var(--light-text);
+      margin-bottom: 30px;
     }
+    
     .error-details {
-      margin: 20px 0;
-      padding: 15px;
-      background-color: #fff9f9;
-      border-radius: 5px;
-      border: 1px solid #ffdddd;
+      margin: 30px 0;
+      padding: 25px;
+      background-color: rgba(248, 113, 113, 0.05);
+      border-radius: 12px;
+      text-align: left;
+    }
+    
+    .detail-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--dark-text);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .detail-title i {
+      margin-right: 10px;
+      color: var(--danger-color);
+    }
+    
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(248, 113, 113, 0.2);
+    }
+    
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    
+    .detail-label {
+      font-weight: 500;
+      color: var(--light-text);
+    }
+    
+    .detail-value {
+      font-weight: 600;
+      color: var(--dark-text);
+    }
+    
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    
+    .retry-button {
+      display: inline-block;
+      width: 100%;
+      padding: 15px 30px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    
+    .retry-button:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-2px);
+    }
+    
+    .back-button {
+      display: inline-block;
+      width: 100%;
+      padding: 15px 30px;
+      background-color: #e2e8f0;
+      color: var(--text-color);
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    
+    .back-button:hover {
+      background-color: #d1d9e6;
+      transform: translateY(-2px);
+    }
+    
+    .button-icon {
+      margin-right: 8px;
+    }
+    
+    .help-text {
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--light-text);
+    }
+    
+    .help-text a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .help-text a:hover {
+      text-decoration: underline;
+    }
+    
+    .footer {
+      background-color: var(--card-bg);
+      padding: 25px 0;
+      text-align: center;
+      border-top: 1px solid var(--border-color);
+      margin-top: auto;
+    }
+    
+    .footer-text {
+      color: var(--light-text);
+      font-size: 14px;
+    }
+    
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 15px 20px;
+      }
+      
+      .error-card {
+        padding: 30px 20px;
+      }
+      
+      .error-title {
+        font-size: 24px;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>支付失败</h1>
-    
-    <div class="error-icon">✗</div>
-    
-    <div class="error-message">
-      <h2>您的付款未能完成</h2>
-      <p>很抱歉，在处理您的付款时发生了错误。</p>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <a href="./index.html" class="logo">
+      <i class="fas fa-globe"></i>
+      AI行程
+    </a>
+  </nav>
+
+  <!-- 主内容 -->
+  <div class="main-container">
+    <div class="error-card">
+      <div class="error-icon">
+        <i class="fas fa-times"></i>
+      </div>
+      
+      <h1 class="error-title">支付失败</h1>
+      <p class="error-message">很抱歉，处理您的付款时遇到了问题。请检查您的支付信息或稍后再试。</p>
+      
+      <div class="error-details">
+        <div class="detail-title">
+          <i class="fas fa-exclamation-triangle"></i>
+          错误详情
+        </div>
+        
+        <div class="detail-row">
+          <span class="detail-label">错误信息</span>
+          <span class="detail-value" id="error-message-text">支付处理失败</span>
+        </div>
+        
+        <div class="detail-row">
+          <span class="detail-label">错误代码</span>
+          <span class="detail-value" id="error-code">未知</span>
+        </div>
+        
+        <div class="detail-row">
+          <span class="detail-label">日期</span>
+          <span class="detail-value" id="current-date"></span>
+        </div>
+      </div>
+      
+      <div class="action-buttons">
+        <a href="./index.html" class="retry-button">
+          <i class="fas fa-redo button-icon"></i> 重新尝试支付
+        </a>
+        
+        <a href="./index.html" class="back-button">
+          <i class="fas fa-arrow-left button-icon"></i> 返回首页
+        </a>
+      </div>
+      
+      <p class="help-text">
+        如需帮助，请联系我们的客服团队：<a href="mailto:support@aixingcheng.com">support@aixingcheng.com</a>
+      </p>
     </div>
-    
-    <div class="error-details">
-      <h3>错误详情</h3>
-      <p><strong>错误信息:</strong> <span id="error-message">支付处理失败</span></p>
-      <p><strong>错误代码:</strong> <span id="error-code">未知</span></p>
-      <p><strong>日期:</strong> <span id="current-date"></span></p>
-    </div>
-    
-    <a href="./index.html" class="try-again-button">重新尝试支付</a>
-    <a href="./index.html" class="try-again-button" style="background-color: #95a5a6; margin-top: 10px;">返回首页</a>
   </div>
+  
+  <!-- 页脚 -->
+  <footer class="footer">
+    <p class="footer-text">&copy; 2025 AI行程. 保留所有权利.</p>
+  </footer>
 
   <script>
-    // 显示当前日期
-    document.getElementById('current-date').textContent = new Date().toLocaleDateString('zh-CN');
-    
-    // 从URL参数中获取错误详情（如果有）
-    const urlParams = new URLSearchParams(window.location.search);
-    const errorMsg = urlParams.get('error_message');
-    const errorCode = urlParams.get('error_code');
-    
-    if (errorMsg) {
-      document.getElementById('error-message').textContent = errorMsg;
-    }
-    
-    if (errorCode) {
-      document.getElementById('error-code').textContent = errorCode;
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+      // 显示当前日期
+      document.getElementById('current-date').textContent = new Date().toLocaleDateString('zh-CN');
+      
+      // 从URL参数中获取错误详情（如果有）
+      const urlParams = new URLSearchParams(window.location.search);
+      const errorMsg = urlParams.get('error_message');
+      const errorCode = urlParams.get('error_code');
+      
+      if (errorMsg) {
+        document.getElementById('error-message-text').textContent = errorMsg;
+      }
+      
+      if (errorCode) {
+        document.getElementById('error-code').textContent = errorCode;
+      }
+    });
   </script>
 </body>
 </html> 
