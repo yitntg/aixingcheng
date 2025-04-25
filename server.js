@@ -12,10 +12,10 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Airwallex API配置 - 直接在此文件中配置，避免需要.env文件
+// Airwallex API配置 - 使用环境变量
 const AIRWALLEX_API = {
-  CLIENT_ID: process.env.AIRWALLEX_CLIENT_ID || 'C8VXbgIDQO-i8Cr8G3IiFQ', // 测试环境使用
-  API_KEY: process.env.AIRWALLEX_API_KEY || '48b84e7457422b80c3972c3ca4703a1c8321a87176399c131234605b0fcae53a616df1da5f6c8637c0a51551a6ede541', // 真实API密钥
+  CLIENT_ID: process.env.AIRWALLEX_CLIENT_ID || '', // 从环境变量获取
+  API_KEY: process.env.AIRWALLEX_API_KEY || '', // 从环境变量获取，不再使用硬编码备用值
   API_BASE: process.env.AIRWALLEX_API_BASE || 'https://api-demo.airwallex.com', // 演示环境
 };
 
