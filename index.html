@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI行程 - 高级会员订阅</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="./css/payment-form.css">
   <style>
     :root {
       --primary-color: #4a6cf7;
@@ -572,8 +573,67 @@
             <img src="https://cdn.jsdelivr.net/gh/krystalzcx/hpoi-image/bankcard/union.png" alt="UnionPay">
           </div>
           
-          <!-- 卡片支付元素将挂载到这里 -->
-          <div id="card-element"></div>
+          <!-- 支付方式选择 -->
+          <div class="payment-methods">
+            <div class="payment-method active" data-method="card">
+              <i class="fas fa-credit-card"></i>
+              <span>信用卡/借记卡</span>
+            </div>
+            <div class="payment-method" data-method="alipay">
+              <i class="fab fa-alipay"></i>
+              <span>支付宝</span>
+            </div>
+            <div class="payment-method" data-method="wechat">
+              <i class="fab fa-weixin"></i>
+              <span>微信支付</span>
+            </div>
+          </div>
+          
+          <!-- 卡片支付表单 -->
+          <div class="payment-method-form" id="card-form">
+            <div class="form-group">
+              <label for="card-number">卡号</label>
+              <div class="card-number-container">
+                <div id="card-number-element" class="card-input"></div>
+                <div class="card-brand"></div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group half">
+                <label for="card-expiry">有效期</label>
+                <div id="card-expiry-element" class="card-input"></div>
+              </div>
+              <div class="form-group half">
+                <label for="card-cvc">安全码</label>
+                <div id="card-cvc-element" class="card-input"></div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="card-holder">持卡人姓名</label>
+              <input type="text" id="card-holder" class="card-input" placeholder="如卡上所示">
+            </div>
+          </div>
+          
+          <!-- 支付宝表单 -->
+          <div class="payment-method-form hidden" id="alipay-form">
+            <div class="qr-placeholder">
+              <i class="fab fa-alipay"></i>
+              <p>点击按钮后将显示支付宝支付二维码</p>
+            </div>
+          </div>
+          
+          <!-- 微信支付表单 -->
+          <div class="payment-method-form hidden" id="wechat-form">
+            <div class="qr-placeholder">
+              <i class="fab fa-weixin"></i>
+              <p>点击按钮后将显示微信支付二维码</p>
+            </div>
+          </div>
+          
+          <!-- 真实的卡片元素会挂载到这里，但不可见 -->
+          <div id="card-element" style="position: absolute; visibility: hidden; height: 0;"></div>
           
           <!-- 支付摘要 -->
           <div class="payment-summary">
