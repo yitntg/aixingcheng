@@ -11,7 +11,8 @@ let currentPaymentMethod = 'card';
 document.addEventListener('DOMContentLoaded', function() {
   setupPaymentMethodSwitcher();
   setupTestData();
-  setupPaymentButton();
+  // 支付按钮由airwallex-integration.js处理
+  // setupPaymentButton();
 });
 
 /**
@@ -94,89 +95,6 @@ function updatePaymentButtonText() {
 }
 
 /**
- * 设置支付按钮
- */
-function setupPaymentButton() {
-  const paymentButton = document.getElementById('payment-button');
-  
-  if (paymentButton) {
-    paymentButton.addEventListener('click', handlePayment);
-  }
-}
-
-/**
- * 处理支付
- */
-function handlePayment() {
-  const paymentButton = document.getElementById('payment-button');
-  const errorMessage = document.getElementById('error-message');
-  
-  // 禁用按钮
-  paymentButton.disabled = true;
-  
-  // 修改按钮文本和样式
-  const originalButtonText = paymentButton.textContent;
-  paymentButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
-  
-  // 显示处理中消息
-  errorMessage.textContent = '正在处理您的支付请求...';
-  errorMessage.style.display = 'block';
-  errorMessage.style.backgroundColor = 'rgba(249, 250, 251, 0.5)';
-  errorMessage.style.color = 'var(--secondary-color)';
-  
-  // 验证表单
-  if (currentPaymentMethod === 'card') {
-    const cardHolder = document.getElementById('card-holder');
-    if (!cardHolder || !cardHolder.value) {
-      showError('请输入持卡人姓名');
-      paymentButton.disabled = false;
-      paymentButton.innerHTML = originalButtonText;
-      return;
-    }
-  }
-  
-  // 模拟处理时间
-  setTimeout(() => {
-    // 随机决定支付成功或失败
-    const success = Math.random() > 0.3;
-    
-    if (success) {
-      // 支付成功
-      errorMessage.textContent = '支付成功！正在跳转...';
-      errorMessage.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
-      errorMessage.style.color = 'var(--success-color)';
-      
-      // 跳转到成功页面
-      setTimeout(() => {
-        const txnId = 'demo_' + Math.random().toString(36).substring(2, 15);
-        window.location.href = `./payment-success.html?txn_id=${txnId}_${currentPaymentMethod}`;
-      }, 1000);
-    } else {
-      // 支付失败
-      const errorMessages = {
-        card: '信用卡支付失败，请检查卡片信息后重试',
-        alipay: '支付宝支付失败，请稍后重试',
-        wechat: '微信支付失败，请稍后重试'
-      };
-      
-      showError(errorMessages[currentPaymentMethod] || '支付失败');
-      
-      // 还原按钮
-      paymentButton.disabled = false;
-      paymentButton.innerHTML = originalButtonText;
-      
-      // 如果失败率高，跳转到失败页面
-      if (Math.random() > 0.7) {
-        setTimeout(() => {
-          const errorCode = 'ERR_' + Math.random().toString(36).substring(2, 8).toUpperCase();
-          window.location.href = `./payment-failed.html?error_message=${encodeURIComponent('支付处理失败')}&error_code=${errorCode}`;
-        }, 1500);
-      }
-    }
-  }, 2000);
-}
-
-/**
  * 显示错误消息
  */
 function showError(message) {
@@ -187,4 +105,24 @@ function showError(message) {
   errorElement.style.display = 'block';
   errorElement.style.backgroundColor = 'rgba(248, 113, 113, 0.1)';
   errorElement.style.color = 'var(--danger-color)';
-} 
+}
+
+/**
+ * 显示成功消息
+ */
+function showSuccess(message) {
+  const errorElement = document.getElementById('error-message');
+  if (!errorElement) return;
+  
+  errorElement.textContent = message;
+  errorElement.style.display = 'block';
+  errorElement.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
+  errorElement.style.color = 'var(--success-color)';
+}
+
+// 导出函数
+window.paymentMethods = {
+  getCurrentMethod: () => currentPaymentMethod,
+  showError,
+  showSuccess
+}; 
