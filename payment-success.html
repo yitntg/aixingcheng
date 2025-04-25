@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>支付成功 - Airwallex支付示例</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .success-icon {
+      text-align: center;
+      font-size: 80px;
+      color: #2ecc71;
+      margin: 20px 0;
+    }
+    .success-message {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .back-button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .back-button:hover {
+      background-color: #2980b9;
+    }
+    .order-details {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>支付成功</h1>
+    
+    <div class="success-icon">✓</div>
+    
+    <div class="success-message">
+      <h2>您的付款已成功处理</h2>
+      <p>感谢您的购买！您的交易已成功完成。</p>
+    </div>
+    
+    <div class="order-details">
+      <h3>订单详情</h3>
+      <p><strong>产品:</strong> 高级会员</p>
+      <p><strong>价格:</strong> ¥100.00 CNY</p>
+      <p><strong>日期:</strong> <span id="current-date"></span></p>
+      <p><strong>交易 ID:</strong> <span id="transaction-id">TXN123456789</span></p>
+    </div>
+    
+    <a href="index.html" class="back-button">返回首页</a>
+  </div>
+
+  <script>
+    // 显示当前日期
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString('zh-CN');
+    
+    // 从URL参数中获取交易ID（如果有）
+    const urlParams = new URLSearchParams(window.location.search);
+    const txnId = urlParams.get('txn_id');
+    if (txnId) {
+      document.getElementById('transaction-id').textContent = txnId;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>支付失败 - Airwallex支付示例</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .error-icon {
+      text-align: center;
+      font-size: 80px;
+      color: #e74c3c;
+      margin: 20px 0;
+    }
+    .error-message {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .try-again-button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      margin-bottom: 15px;
+    }
+    .try-again-button:hover {
+      background-color: #2980b9;
+    }
+    .error-details {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #fff9f9;
+      border-radius: 5px;
+      border: 1px solid #ffdddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>支付失败</h1>
+    
+    <div class="error-icon">✗</div>
+    
+    <div class="error-message">
+      <h2>您的付款未能完成</h2>
+      <p>很抱歉，在处理您的付款时发生了错误。</p>
+    </div>
+    
+    <div class="error-details">
+      <h3>错误详情</h3>
+      <p><strong>错误信息:</strong> <span id="error-message">支付处理失败</span></p>
+      <p><strong>错误代码:</strong> <span id="error-code">未知</span></p>
+      <p><strong>日期:</strong> <span id="current-date"></span></p>
+    </div>
+    
+    <a href="index.html" class="try-again-button">重新尝试支付</a>
+    <a href="index.html" class="try-again-button" style="background-color: #95a5a6; margin-top: 10px;">返回首页</a>
+  </div>
+
+  <script>
+    // 显示当前日期
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString('zh-CN');
+    
+    // 从URL参数中获取错误详情（如果有）
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorMsg = urlParams.get('error_message');
+    const errorCode = urlParams.get('error_code');
+    
+    if (errorMsg) {
+      document.getElementById('error-message').textContent = errorMsg;
+    }
+    
+    if (errorCode) {
+      document.getElementById('error-code').textContent = errorCode;
+    }
+  </script>
+</body>
+</html> 
