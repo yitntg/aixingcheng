@@ -3,185 +3,151 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>高级会员订阅</title>
-  <!-- Font Awesome 图标库 -->
+  <title>AI行程规划会员订阅</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- 添加Font Awesome图标库 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Airwallex SDK -->
-  <script src="https://checkout.airwallex.com/assets/elements.bundle.min.js"></script>
-  <script src="./js/airwallex-integration.js"></script>
-  <script src="./js/payment-methods.js"></script>
   <style>
     :root {
-      --primary-color: #4a6cf7;
-      --secondary-color: #6b7cff;
-      --accent-color: #00d9bf;
-      --text-color: #4d5461;
-      --light-text: #737791;
-      --dark-text: #212b36;
-      --border-color: #e7eaf4;
-      --success-color: #34d399;
-      --danger-color: #f87171;
-      --warning-color: #fbbf24;
-      --bg-color: #f9faff;
-      --card-bg: #ffffff;
-      --box-shadow: 0 15px 40px rgba(58, 65, 111, 0.07);
+      --primary-color: #3498db;
+      --secondary-color: #2980b9;
+      --success-color: #2ecc71;
+      --danger-color: #e74c3c;
+      --light-gray: #f8f9fa;
+      --dark-gray: #6c757d;
     }
     
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    .payment-container {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 30px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     
-    body {
-      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      line-height: 1.6;
-      color: var(--text-color);
-      background-color: var(--bg-color);
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    
-    .container {
-      width: 100%;
-      max-width: 500px;
-      padding: 20px;
-    }
-    
-    .header {
+    .package-details {
       text-align: center;
       margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
     }
     
-    .logo {
-      font-size: 28px;
-      font-weight: bold;
+    .package-icon {
+      font-size: 48px;
       color: var(--primary-color);
+      margin-bottom: 15px;
+    }
+    
+    .package-title {
+      font-size: 24px;
+      font-weight: 700;
       margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      color: #333;
     }
     
-    .logo i {
-      margin-right: 10px;
+    .package-description {
+      color: var(--dark-gray);
+      margin-bottom: 15px;
     }
     
-    .payment-card {
-      background-color: var(--card-bg);
-      border-radius: 16px;
-      box-shadow: var(--box-shadow);
-      padding: 30px;
-      margin-bottom: 20px;
-    }
-    
-    .payment-title {
-      font-size: 20px;
-      font-weight: 600;
-      color: var(--dark-text);
-      margin-bottom: 20px;
-    }
-    
-    .subscription-info {
-      background-color: rgba(74, 108, 247, 0.05);
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 25px;
-    }
-    
-    .plan-price {
+    .package-price {
       font-size: 28px;
-      font-weight: 800;
+      font-weight: 700;
       color: var(--primary-color);
-      margin-bottom: 10px;
-      text-align: center;
     }
     
-    .plan-price small {
-      font-size: 16px;
-      font-weight: 400;
-      color: var(--light-text);
-    }
-    
-    .features-list {
-      list-style: none;
-      margin: 15px 0;
-    }
-    
-    .features-list li {
-      padding: 8px 0;
-      display: flex;
-      align-items: center;
-    }
-    
-    .features-list i {
-      color: var(--success-color);
-      margin-right: 10px;
-      font-size: 16px;
-    }
-    
-    .card-brand-icons {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      justify-content: center;
-    }
-    
-    .card-brand-icons img {
-      height: 24px;
-      opacity: 0.6;
+    .package-price-period {
+      font-size: 14px;
+      color: var(--dark-gray);
     }
     
     .payment-methods {
       display: flex;
-      gap: 10px;
       margin-bottom: 20px;
+      border-bottom: 1px solid #eee;
     }
     
     .payment-method {
       flex: 1;
-      padding: 12px 10px;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
       text-align: center;
+      padding: 15px 10px;
       cursor: pointer;
-      transition: all 0.3s;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
     }
     
-    .payment-method i {
-      display: block;
-      font-size: 24px;
-      margin-bottom: 5px;
-      color: var(--light-text);
-    }
-    
-    .payment-method span {
-      font-size: 14px;
+    .payment-method:hover {
+      background-color: var(--light-gray);
     }
     
     .payment-method.active {
-      border-color: var(--primary-color);
-      background-color: rgba(74, 108, 247, 0.05);
+      border-bottom: 3px solid var(--primary-color);
+      font-weight: 600;
     }
     
-    .payment-method.active i,
-    .payment-method.active span {
+    .payment-method-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: var(--dark-gray);
+    }
+    
+    .payment-method.active .payment-method-icon {
       color: var(--primary-color);
     }
     
+    .payment-form-container {
+      margin-top: 20px;
+    }
+    
     .payment-method-form {
-      margin: 20px 0;
+      display: block;
     }
     
     .payment-method-form.hidden {
       display: none;
     }
     
+    #card-form {
+      display: block;
+    }
+    
     .form-group {
-      margin-bottom: 15px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #555;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      transition: border-color 0.2s;
+    }
+    
+    .form-control:focus {
+      border-color: var(--primary-color);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+    
+    .form-control.error {
+      border-color: var(--danger-color);
+    }
+    
+    .field-error {
+      color: var(--danger-color);
+      font-size: 13px;
+      margin-top: 5px;
+      display: none;
     }
     
     .form-row {
@@ -189,400 +155,162 @@
       gap: 15px;
     }
     
-    .form-group.half {
+    .form-row .form-group {
       flex: 1;
-    }
-    
-    .form-group label {
-      display: block;
-      font-size: 14px;
-      color: var(--dark-text);
-      margin-bottom: 6px;
-    }
-    
-    .card-input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      font-size: 16px;
-      transition: border-color 0.3s;
-      min-height: 45px;
-      background-color: white;
-    }
-    
-    #card-number-element,
-    #card-expiry-element,
-    #card-cvc-element {
-      min-height: 24px;
-      padding: 10px 0;
-      display: block;
-      position: relative;
-    }
-    
-    /* Airwallex Elements的基本样式 */
-    .airwallex-element {
-      background-color: transparent;
-      border: none;
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    
-    .card-input:focus {
-      border-color: var(--primary-color);
-      outline: none;
-    }
-    
-    .card-number-container {
-      position: relative;
     }
     
     .card-brand {
       position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
+      right: 15px;
+      top: 42px;
+      font-size: 24px;
     }
     
-    #card-element {
-      position: absolute;
-      visibility: hidden;
-      height: 0;
-    }
-    
-    .qr-placeholder {
-      text-align: center;
-      padding: 30px;
-      background-color: #f8fafc;
-      border-radius: 8px;
-      border: 1px dashed var(--border-color);
-    }
-    
-    .qr-placeholder i {
-      font-size: 48px;
-      color: var(--light-text);
-      margin-bottom: 15px;
-    }
-    
-    .qr-placeholder p {
-      color: var(--light-text);
-    }
-    
-    .payment-summary {
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border-color);
-    }
-    
-    .payment-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-    
-    .payment-row.total {
-      font-weight: bold;
-      font-size: 18px;
-      color: var(--dark-text);
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border-color);
-    }
-    
-    .error-message {
-      color: var(--danger-color);
-      margin-top: 10px;
-      font-size: 14px;
-      padding: 10px;
-      background-color: rgba(248, 113, 113, 0.1);
-      border-radius: 6px;
+    #error-message {
+      margin: 15px 0;
+      padding: 12px 15px;
+      border-radius: 4px;
       display: none;
     }
     
     .payment-button {
-      display: block;
       width: 100%;
       padding: 15px;
       background-color: var(--primary-color);
       color: white;
       border: none;
-      border-radius: 10px;
-      font-size: 16px;
+      border-radius: 4px;
+      font-size: 18px;
       font-weight: 600;
       cursor: pointer;
-      margin-top: 20px;
-      transition: background-color 0.3s, transform 0.2s;
+      transition: background-color 0.2s;
     }
     
     .payment-button:hover {
       background-color: var(--secondary-color);
-      transform: translateY(-2px);
     }
     
-    .payment-button:active {
-      transform: translateY(0);
+    .payment-button:disabled {
+      background-color: var(--dark-gray);
+      cursor: not-allowed;
     }
     
-    .secure-badge {
-      text-align: center;
+    .payment-footer {
       margin-top: 20px;
-      color: var(--light-text);
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .secure-badge i {
-      margin-right: 6px;
-      color: var(--success-color);
-    }
-    
-    .footer {
       text-align: center;
-      margin-top: 20px;
-      color: var(--light-text);
+      color: var(--dark-gray);
       font-size: 14px;
+    }
+    
+    .payment-footer i {
+      color: var(--primary-color);
+      margin-right: 5px;
+    }
+    
+    @media (max-width: 576px) {
+      .payment-container {
+        padding: 20px;
+        margin: 20px 10px;
+      }
+      
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="logo">
-        <i class="fas fa-globe"></i>
-        高级会员订阅
+  <div class="payment-container">
+    <div class="package-details">
+      <div class="package-icon">
+        <i class="fas fa-road"></i>
       </div>
+      <h2 class="package-title">AI行程规划会员订阅</h2>
+      <p class="package-description">解锁全部功能，让AI为您规划完美行程</p>
+      <div class="package-price">¥99.00 <span class="package-price-period">/ 月</span></div>
     </div>
-
-    <div class="payment-card">
-      <div class="subscription-info">
-        <div class="plan-price">¥99.00 <small>/月</small></div>
-        <ul class="features-list">
-          <li><i class="fas fa-check-circle"></i> 无限AI行程规划方案</li>
-          <li><i class="fas fa-check-circle"></i> 高级个性化选项</li>
-          <li><i class="fas fa-check-circle"></i> 优先客户支持</li>
-          <li><i class="fas fa-check-circle"></i> 30天无条件退款保证</li>
-        </ul>
-      </div>
-
-      <h3 class="payment-title">支付信息</h3>
-      
-      <div class="card-brand-icons">
-        <img src="https://cdn.jsdelivr.net/gh/krystalzcx/hpoi-image/bankcard/visa.png" alt="Visa">
-        <img src="https://cdn.jsdelivr.net/gh/krystalzcx/hpoi-image/bankcard/mastercard.png" alt="MasterCard">
-        <img src="https://cdn.jsdelivr.net/gh/krystalzcx/hpoi-image/bankcard/union.png" alt="UnionPay">
-      </div>
-      
-      <!-- 支付方式选择 -->
-      <div class="payment-methods">
-        <div class="payment-method active" data-method="card">
+    
+    <div class="payment-methods">
+      <div class="payment-method active" data-method="card">
+        <div class="payment-method-icon">
           <i class="fas fa-credit-card"></i>
-          <span>信用卡/借记卡</span>
         </div>
-        <div class="payment-method" data-method="alipay">
+        <div>信用卡</div>
+      </div>
+      <div class="payment-method" data-method="alipay">
+        <div class="payment-method-icon">
           <i class="fab fa-alipay"></i>
-          <span>支付宝</span>
         </div>
-        <div class="payment-method" data-method="wechat">
+        <div>支付宝</div>
+      </div>
+      <div class="payment-method" data-method="wechat">
+        <div class="payment-method-icon">
           <i class="fab fa-weixin"></i>
-          <span>微信支付</span>
         </div>
-      </div>
-      
-      <!-- 卡片支付表单 -->
-      <div class="payment-method-form" id="card-form">
-        <div class="form-group">
-          <label for="card-number">卡号</label>
-          <div class="card-number-container">
-            <div id="card-number-element" class="card-input"></div>
-            <div class="card-brand"></div>
-          </div>
-        </div>
-        
-        <div class="form-row">
-          <div class="form-group half">
-            <label for="card-expiry">有效期</label>
-            <div id="card-expiry-element" class="card-input"></div>
-          </div>
-          <div class="form-group half">
-            <label for="card-cvc">安全码</label>
-            <div id="card-cvc-element" class="card-input"></div>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="card-holder">持卡人姓名</label>
-          <input type="text" id="card-holder" class="card-input" placeholder="如卡上所示">
-        </div>
-      </div>
-      
-      <!-- 支付宝表单 -->
-      <div class="payment-method-form hidden" id="alipay-form">
-        <div class="qr-placeholder">
-          <i class="fab fa-alipay"></i>
-          <p>点击按钮后将显示支付宝支付二维码</p>
-        </div>
-      </div>
-      
-      <!-- 微信支付表单 -->
-      <div class="payment-method-form hidden" id="wechat-form">
-        <div class="qr-placeholder">
-          <i class="fab fa-weixin"></i>
-          <p>点击按钮后将显示微信支付二维码</p>
-        </div>
-      </div>
-      
-      <!-- 真实的卡片元素会挂载到这里，但不可见 -->
-      <div id="card-element" style="position: absolute; visibility: hidden; height: 0;"></div>
-      
-      <!-- 支付摘要 -->
-      <div class="payment-summary">
-        <div class="payment-row">
-          <span>会员套餐</span>
-          <span>¥99.00</span>
-        </div>
-        <div class="payment-row">
-          <span>优惠</span>
-          <span>-¥0.00</span>
-        </div>
-        <div class="payment-row total">
-          <span>总计</span>
-          <span>¥99.00</span>
-        </div>
-      </div>
-      
-      <!-- 错误信息显示区域 -->
-      <div id="error-message" class="error-message"></div>
-      
-      <!-- 支付按钮 -->
-      <button id="payment-button" class="payment-button">确认支付 ¥99.00</button>
-      
-      <div class="secure-badge">
-        <i class="fas fa-lock"></i> 安全支付 SSL加密
+        <div>微信支付</div>
       </div>
     </div>
     
-    <div class="footer">
-      &copy; 2025. 保留所有权利.
+    <div class="payment-form-container">
+      <form id="payment-form">
+        <!-- 信用卡支付表单 -->
+        <div id="card-form" class="payment-method-form">
+          <div class="form-group">
+            <label for="card-holder" class="form-label">持卡人姓名</label>
+            <input type="text" id="card-holder" class="form-control" placeholder="请输入持卡人姓名">
+          </div>
+          
+          <div class="form-group">
+            <label for="card-number" class="form-label">卡号</label>
+            <input type="text" id="card-number" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19">
+            <div class="card-brand">
+              <i class="far fa-credit-card" style="color: #6B7280;"></i>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="card-expiry" class="form-label">有效期 (MM/YY)</label>
+              <input type="text" id="card-expiry" class="form-control" placeholder="MM/YY" maxlength="5">
+            </div>
+            
+            <div class="form-group">
+              <label for="card-cvc" class="form-label">安全码</label>
+              <input type="text" id="card-cvc" class="form-control" placeholder="CVC" maxlength="4">
+            </div>
+          </div>
+        </div>
+        
+        <!-- 支付宝支付表单 -->
+        <div id="alipay-form" class="payment-method-form hidden">
+          <div class="form-group" style="text-align: center; padding: 30px 0;">
+            <p style="margin-bottom: 15px;">点击下方按钮后将跳转至支付宝付款页面</p>
+            <img src="https://cdn.jsdelivr.net/gh/krystalzcx/hpoi-image/payment/alipay-logo.png" alt="支付宝" style="height: 40px;">
+          </div>
+        </div>
+        
+        <!-- 微信支付表单 -->
+        <div id="wechat-form" class="payment-method-form hidden">
+          <div class="form-group" style="text-align: center; padding: 30px 0;">
+            <p style="margin-bottom: 15px;">点击下方按钮后将显示微信支付二维码</p>
+            <img src="https://cdn.jsdelivr.net/gh/krystalzcx/hpoi-image/payment/wechat-pay-logo.png" alt="微信支付" style="height: 40px;">
+          </div>
+        </div>
+        
+        <div id="error-message" class="error-message"></div>
+        
+        <button type="submit" id="payment-button" class="payment-button">确认支付 ¥99.00</button>
+      </form>
+    </div>
+    
+    <div class="payment-footer">
+      <p><i class="fas fa-lock"></i> 安全支付保障，您的支付信息受到加密保护</p>
+      <p style="margin-top: 10px;">点击"确认支付"即表示您同意我们的 <a href="#">服务条款</a> 和 <a href="#">隐私政策</a></p>
     </div>
   </div>
-
-  <!-- 内联脚本 -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // 立即初始化Airwallex SDK
-      if (window.Airwallex) {
-        console.log('找到Airwallex，开始初始化...');
-      } else {
-        console.error('没有找到Airwallex SDK!');
-      }
-      
-      // 支付方式切换
-      const paymentMethods = document.querySelectorAll('.payment-method');
-      const paymentForms = document.querySelectorAll('.payment-method-form');
-      
-      paymentMethods.forEach(method => {
-        method.addEventListener('click', function() {
-          // 移除所有active类
-          paymentMethods.forEach(m => m.classList.remove('active'));
-          // 隐藏所有表单
-          paymentForms.forEach(form => form.classList.add('hidden'));
-          
-          // 激活当前选择的方式
-          this.classList.add('active');
-          // 显示对应的表单
-          const formId = this.getAttribute('data-method') + '-form';
-          document.getElementById(formId).classList.remove('hidden');
-        });
-      });
-      
-      // 支付按钮点击事件
-      const paymentButton = document.getElementById('payment-button');
-      
-      if (paymentButton) {
-        paymentButton.addEventListener('click', function() {
-          // 显示处理中
-          showError('正在处理您的支付请求...');
-          document.getElementById('error-message').style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
-          document.getElementById('error-message').style.color = 'var(--success-color)';
-          
-          // 获取持卡人信息
-          const cardHolder = document.getElementById('card-holder') ? document.getElementById('card-holder').value : '测试用户';
-          
-          // 处理客户数据
-          const customer = {
-            firstName: cardHolder.split(' ')[0] || '测试',
-            lastName: cardHolder.split(' ')[1] || '用户',
-            email: 'customer@example.com'
-          };
-          
-          // 处理支付数据
-          const paymentData = {
-            amount: 99.00,
-            currency: 'CNY',
-            merchantOrderId: 'order_' + Date.now()
-          };
-          
-          // 使用Airwallex支付或模拟支付
-          if (window.Airwallex && window.airwallexPayment) {
-            // 触发支付处理事件
-            document.dispatchEvent(new CustomEvent('payment-form-submit', {
-              detail: { paymentData, customer }
-            }));
-          } else {
-            // 模拟支付流程（测试环境）
-            setTimeout(() => {
-              const isSuccess = Math.random() > 0.3;
-              
-              if (isSuccess) {
-                window.location.href = './payment-success.html?txn_id=SIM' + Math.floor(Math.random() * 1000000);
-              } else {
-                window.location.href = './payment-failed.html?error_message=模拟支付失败&error_code=TEST_ERROR_' + Math.floor(Math.random() * 100);
-              }
-            }, 2000);
-          }
-        });
-      }
-      
-      function showError(message) {
-        const errorElement = document.getElementById('error-message');
-        if (errorElement) {
-          errorElement.textContent = message;
-          errorElement.style.display = 'block';
-        }
-      }
-
-      // 初始化Airwallex SDK
-      if (window.airwallexPayment) {
-        airwallexPayment.init();
-      }
-      
-      // 页面加载5秒后检查Airwallex元素是否已挂载
-      setTimeout(function() {
-        checkElementsLoaded();
-      }, 5000);
-      
-      function checkElementsLoaded() {
-        const cardNumberEl = document.getElementById('card-number-element');
-        const cardExpiryEl = document.getElementById('card-expiry-element');
-        const cardCvcEl = document.getElementById('card-cvc-element');
-        
-        if (cardNumberEl && cardNumberEl.children.length === 0) {
-          console.error('卡号元素未正确挂载!');
-          // 尝试重新初始化
-          if (window.airwallexPayment) {
-            console.log('尝试重新初始化Airwallex...');
-            airwallexPayment.initializeFormFields();
-          }
-        } else {
-          console.log('卡号元素已正确挂载');
-        }
-      }
-    });
-  </script>
+  
+  <!-- 引入JavaScript文件 -->
+  <script src="js/payment.js" type="module"></script>
 </body>
 </html> 
