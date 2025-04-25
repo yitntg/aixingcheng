@@ -266,22 +266,65 @@
     <p class="footer-text">&copy; 2025 AI行程. 保留所有权利.</p>
   </footer>
 
+  <!-- 使用CDN引入Airwallex JS SDK -->
+  <script src="https://checkout.airwallex.com/assets/elements.bundle.min.js"></script>
+  
+  <!-- 内联脚本 -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // 显示当前日期
-      const today = new Date();
-      document.getElementById('current-date').textContent = today.toLocaleDateString('zh-CN');
+      // 获取URL参数
+      const params = new URLSearchParams(window.location.search);
+      const txnId = params.get('txn_id') || 'UNKNOWN';
       
-      // 计算下次扣款日期（一个月后）
-      const nextPaymentDate = new Date(today);
-      nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
-      document.getElementById('next-payment-date').textContent = nextPaymentDate.toLocaleDateString('zh-CN');
+      // 设置交易ID
+      document.getElementById('transaction-id').textContent = txnId;
       
-      // 从URL参数中获取交易ID（如果有）
-      const urlParams = new URLSearchParams(window.location.search);
-      const txnId = urlParams.get('txn_id');
-      if (txnId) {
-        document.getElementById('transaction-id').textContent = txnId;
+      // 解析交易ID获取支付方式
+      let paymentMethod = '信用卡';
+      if (txnId.includes('alipay')) {
+        paymentMethod = '支付宝';
+      } else if (txnId.includes('wechat')) {
+        paymentMethod = '微信支付';
+      } else if (txnId.startsWith('int_')) {
+        // Airwallex交易ID格式
+        paymentMethod = 'Airwallex支付';
+        
+        // 在实际应用中，这里可以调用Airwallex API获取支付详情
+        // 使用intent_id查询支付详情
+        fetchPaymentDetails(txnId);
+      }
+      document.getElementById('payment-method').textContent = paymentMethod;
+      
+      // 设置支付时间为当前时间
+      const now = new Date();
+      const formattedDate = now.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      document.getElementById('payment-time').textContent = formattedDate;
+      
+      // 发票按钮点击事件
+      document.getElementById('invoice-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        alert('发票申请功能即将上线，敬请期待！');
+      });
+      
+      /**
+       * 获取Airwallex支付详情
+       * 在实际应用中，这应该通过服务器端进行
+       */
+      function fetchPaymentDetails(intentId) {
+        // 注意：实际生产环境中，这个操作应该在服务器端进行
+        // 客户端不应该直接访问Airwallex API
+        console.log('查询支付详情:', intentId);
+        
+        // 这里我们模拟成功获取了支付详情
+        // 在实际应用中，您应该通过后端API查询Airwallex支付详情
       }
     });
   </script>

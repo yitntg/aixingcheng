@@ -452,6 +452,7 @@
   </style>
   <!-- Airwallex SDK -->
   <script src="https://checkout.airwallex.com/assets/elements.bundle.min.js"></script>
+  <script src="./js/airwallex-integration.js"></script>
   <script src="./js/payment-methods.js"></script>
 </head>
 <body>
@@ -733,16 +734,41 @@
           document.getElementById('error-message').style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
           document.getElementById('error-message').style.color = 'var(--success-color)';
           
-          // 随机选择成功或失败结果
-          const isSuccess = Math.random() > 0.3;
+          // 获取持卡人信息
+          const cardHolder = document.getElementById('card-holder') ? document.getElementById('card-holder').value : '测试用户';
           
-          setTimeout(() => {
-            if (isSuccess) {
-              window.location.href = './payment-success.html?txn_id=SIM' + Math.floor(Math.random() * 1000000);
-            } else {
-              window.location.href = './payment-failed.html?error_message=模拟支付失败&error_code=TEST_ERROR_' + Math.floor(Math.random() * 100);
-            }
-          }, 2000);
+          // 处理客户数据
+          const customer = {
+            firstName: cardHolder.split(' ')[0] || '测试',
+            lastName: cardHolder.split(' ')[1] || '用户',
+            email: 'customer@example.com'
+          };
+          
+          // 处理支付数据
+          const paymentData = {
+            amount: 99.00,
+            currency: 'CNY',
+            merchantOrderId: 'order_' + Date.now()
+          };
+          
+          // 使用Airwallex支付或模拟支付
+          if (window.Airwallex && window.airwallexPayment) {
+            // 触发支付处理事件
+            document.dispatchEvent(new CustomEvent('payment-form-submit', {
+              detail: { paymentData, customer }
+            }));
+          } else {
+            // 模拟支付流程（测试环境）
+            setTimeout(() => {
+              const isSuccess = Math.random() > 0.3;
+              
+              if (isSuccess) {
+                window.location.href = './payment-success.html?txn_id=SIM' + Math.floor(Math.random() * 1000000);
+              } else {
+                window.location.href = './payment-failed.html?error_message=模拟支付失败&error_code=TEST_ERROR_' + Math.floor(Math.random() * 100);
+              }
+            }, 2000);
+          }
         });
       }
       
@@ -752,6 +778,11 @@
           errorElement.textContent = message;
           errorElement.style.display = 'block';
         }
+      }
+
+      // 初始化Airwallex SDK
+      if (window.airwallexPayment) {
+        airwallexPayment.init();
       }
     });
   </script>
