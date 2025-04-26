@@ -118,6 +118,9 @@ function bindPaymentFormSubmission() {
         case 'wechat':
           await handleWechatPayment();
           break;
+        case 'googlepay':
+          await handleGooglePayPayment();
+          break;
         default:
           throw new Error('不支持的支付方式');
       }
@@ -203,56 +206,45 @@ async function handleAlipayPayment() {
  * 处理微信支付
  */
 async function handleWechatPayment() {
+  // 实现微信支付逻辑...
+  console.log('处理微信支付...');
+  
+  // 示例实现，在实际应用中应通过后端API获取支付二维码
+  showError('微信支付功能正在开发中...');
+  throw new Error('微信支付功能暂未实现');
+}
+
+/**
+ * 处理Google Pay支付
+ */
+async function handleGooglePayPayment() {
   // 构建支付参数
   const paymentParams = {
     intent_id: paymentIntent.id,
-    payment_method: 'wechat',
+    payment_method: 'googlepay',
     payment_method_options: {
-      wechat: {
-        app_id: 'your_wechat_app_id'
+      googlepay: {
+        return_url: window.location.origin + '/payment-return'
       }
     }
   };
   
   // 确认支付
-  const result = await confirmPayment(paymentParams);
-  
-  if (result.success && result.qr_code_url) {
-    // 显示微信支付二维码
-    // 注意：实际应用中需要创建一个二维码显示组件
-    const wechatForm = document.getElementById('wechat-form');
-    const qrCodeImg = document.createElement('img');
-    qrCodeImg.src = result.qr_code_url;
-    qrCodeImg.alt = '微信支付二维码';
-    qrCodeImg.style.width = '200px';
-    qrCodeImg.style.height = '200px';
+  try {
+    console.log('处理Google Pay支付...');
+    const result = await confirmPayment(paymentParams);
     
-    // 清除之前的二维码（如果有）
-    const existingQrCode = wechatForm.querySelector('.wechat-qrcode');
-    if (existingQrCode) {
-      existingQrCode.remove();
+    if (result.success && result.redirect_url) {
+      // 跳转到Google Pay付款页面
+      window.location.href = result.redirect_url;
+    } else {
+      throw new Error(result.error || 'Google Pay支付初始化失败，请重试');
     }
-    
-    // 添加新的二维码
-    const qrCodeContainer = document.createElement('div');
-    qrCodeContainer.className = 'wechat-qrcode';
-    qrCodeContainer.style.textAlign = 'center';
-    qrCodeContainer.style.marginTop = '20px';
-    qrCodeContainer.appendChild(qrCodeImg);
-    
-    const instruction = document.createElement('p');
-    instruction.textContent = '请使用微信扫描二维码完成支付';
-    instruction.style.marginTop = '10px';
-    qrCodeContainer.appendChild(instruction);
-    
-    wechatForm.appendChild(qrCodeContainer);
-    
-    // 恢复支付按钮状态
-    const paymentButton = document.getElementById('payment-button');
-    paymentButton.disabled = false;
-    paymentButton.textContent = '确认支付 ¥0.10';
-  } else {
-    throw new Error(result.error || '微信支付二维码生成失败，请重试');
+  } catch (error) {
+    console.error('Google Pay支付失败:', error);
+    // 显示演示提示
+    showError('Google Pay支付功能正在开发中...');
+    throw new Error('Google Pay支付功能暂未完全实现');
   }
 }
 
@@ -436,5 +428,6 @@ export {
   initPaymentModule,
   handleCardPayment,
   handleAlipayPayment,
-  handleWechatPayment
+  handleWechatPayment,
+  handleGooglePayPayment
 }; 

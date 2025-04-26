@@ -27,6 +27,15 @@ app.use(express.static(path.join(__dirname)));
 // 导入Airwallex支付处理逻辑
 const { getApiToken, createPaymentIntent, getPaymentIntent } = require('./server/payment-logic');
 
+// 临时路由，仅用于测试环境变量（验证后应移除）
+app.get('/api/test-env', (req, res) => {
+  res.json({
+    has_client_id: !!process.env.AIRWALLEX_CLIENT_ID,
+    has_api_key: !!process.env.AIRWALLEX_API_KEY,
+    api_base: process.env.AIRWALLEX_API_BASE
+  });
+});
+
 // API路由 - 创建支付意图
 app.post('/api/create-payment-intent', async (req, res) => {
   try {
@@ -73,6 +82,7 @@ app.listen(PORT, () => {
   API端点:
   - 创建支付意图: POST http://localhost:${PORT}/api/create-payment-intent
   - 查询支付意图: GET http://localhost:${PORT}/api/payment-intent/:id
+  - 测试环境变量: GET http://localhost:${PORT}/api/test-env
   
   使用 Ctrl+C 停止服务器
 =================================================

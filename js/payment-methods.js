@@ -41,8 +41,54 @@ function setupPaymentMethodSwitcher() {
       
       // 更新按钮文本
       updatePaymentButtonText();
+
+      // 处理特殊支付方式的UI显示/隐藏
+      handleSpecialPaymentMethods(currentPaymentMethod);
     });
   });
+}
+
+/**
+ * 处理特殊支付方式的UI显示/隐藏
+ * @param {string} method - 当前选择的支付方式
+ */
+function handleSpecialPaymentMethods(method) {
+  const paymentButton = document.getElementById('payment-button');
+  
+  // 重置按钮可见性和其他元素
+  paymentButton.style.display = 'block';
+  
+  // 根据支付方式执行特殊逻辑
+  switch(method) {
+    case 'applepay':
+      // Apple Pay接口在某些环境下需要特殊处理
+      if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
+        console.log('设备支持Apple Pay');
+        document.getElementById('apple-pay-button').style.display = 'flex';
+      } else {
+        console.log('设备不支持Apple Pay');
+        showError('您的设备可能不支持Apple Pay，请选择其他支付方式');
+      }
+      break;
+      
+    case 'googlepay':
+      // Google Pay接口处理
+      // 检查设备是否支持Google Pay
+      if (window.google && window.google.payments) {
+        console.log('设备支持Google Pay');
+        document.getElementById('google-pay-button').style.display = 'flex';
+      } else {
+        console.log('设备不支持Google Pay');
+        showError('您的设备可能不支持Google Pay，请选择其他支付方式');
+      }
+      break;
+      
+    case 'paypal':
+      // PayPal在某些情况下可能使用其自带按钮
+      // 如果使用PayPal SDK的自定义按钮，可以考虑隐藏默认按钮
+      // paymentButton.style.display = 'none'; 
+      break;
+  }
 }
 
 /**
@@ -91,6 +137,18 @@ function updatePaymentButtonText() {
     case 'wechat':
       paymentButton.textContent = '使用微信支付';
       break;
+    case 'paypal':
+      paymentButton.textContent = '使用PayPal支付';
+      break;
+    case 'applepay':
+      paymentButton.textContent = '使用Apple Pay支付';
+      break;
+    case 'googlepay':
+      paymentButton.textContent = '使用Google Pay支付';
+      break;
+    case 'unionpay':
+      paymentButton.textContent = '使用银联支付';
+      break;
   }
 }
 
@@ -118,6 +176,43 @@ function showSuccess(message) {
   errorElement.style.display = 'block';
   errorElement.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
   errorElement.style.color = 'var(--success-color)';
+}
+
+/**
+ * 设置Apple Pay按钮点击事件
+ */
+function setupApplePayButton() {
+  const applePayButton = document.getElementById('apple-pay-button');
+  if (applePayButton) {
+    applePayButton.addEventListener('click', function() {
+      // 模拟触发主支付按钮
+      document.getElementById('payment-button').click();
+    });
+  }
+}
+
+/**
+ * 设置Google Pay按钮点击事件
+ */
+function setupGooglePayButton() {
+  const googlePayButton = document.getElementById('google-pay-button');
+  if (googlePayButton) {
+    googlePayButton.addEventListener('click', function() {
+      // 模拟触发主支付按钮
+      document.getElementById('payment-button').click();
+    });
+  }
+}
+
+// 执行初始化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    setupApplePayButton();
+    setupGooglePayButton();
+  });
+} else {
+  setupApplePayButton();
+  setupGooglePayButton();
 }
 
 // 导出函数
