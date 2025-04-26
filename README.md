@@ -1,6 +1,6 @@
-# Airwallex 支付系统
+# AI行程 Airwallex 支付系统
 
-这是一个基于Next.js和Airwallex API构建的支付系统示例项目。该项目展示了如何集成Airwallex支付功能到您的Web应用程序中。
+这是一个基于Next.js和Airwallex API构建的支付系统，专为AI行程规划服务设计。该项目展示了如何集成Airwallex支付功能到您的Web应用程序中。
 
 ## 功能特点
 
@@ -10,6 +10,9 @@
 - 多种货币支持
 - 实时交易记录
 - 安全的支付处理
+- 多种订阅计划展示（月度、年度、高级）
+- 支付成功和失败页面
+- 订单信息展示
 
 ## 技术栈
 
@@ -32,8 +35,8 @@
 1. 克隆仓库
 
 ```bash
-git clone https://github.com/yourusername/airwallex-payment-system.git
-cd airwallex-payment-system
+git clone https://github.com/yitntg/aixingcheng.git
+cd aixingcheng
 ```
 
 2. 安装依赖
@@ -110,7 +113,17 @@ yarn start
 - 在生产环境中使用时，请确保您的Airwallex API密钥安全，不要将其暴露在客户端代码中。
 - 在实际应用程序中，您应该在服务器端创建支付意图，而不是在客户端。
 - 请参阅[Airwallex API文档](https://www.airwallex.com/docs/api)获取更多详细信息。
+- 支付功能需要Airwallex账户和相应的API凭证
+- 在生产环境中，请确保使用HTTPS协议
+
+## 常见问题
+
+**问题**: 支付按钮点击后没有反应  
+**解决**: 检查浏览器控制台是否有JavaScript错误，确保API凭证配置正确
+
+**问题**: API请求报错  
+**解决**: 检查环境变量是否正确配置，API密钥是否有效
 
 ## 许可证
 
-MIT 
+MIT

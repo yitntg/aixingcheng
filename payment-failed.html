@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>支付失败 - AI行程订阅</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .failed-icon {
+      font-size: 5rem;
+      color: #ef4444;
+      margin-bottom: 1.5rem;
+    }
+    .failed-card {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    .error-details {
+      background-color: #fef2f2;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      border-left: 4px solid #ef4444;
+    }
+    .error-message {
+      color: #b91c1c;
+      font-weight: 500;
+    }
+    .help-section {
+      background-color: #f8fafc;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .help-title {
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #0f172a;
+    }
+    .help-list {
+      padding-left: 1.5rem;
+    }
+    .help-list li {
+      margin-bottom: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">
+        <i class="fas fa-plane-departure me-2"></i>AI行程
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">首页</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 失败信息 -->
+  <section class="py-5">
+    <div class="container">
+      <div class="failed-card animate-fade-in">
+        <div class="text-center">
+          <i class="fas fa-times-circle failed-icon"></i>
+          <h2 class="mb-3">支付失败</h2>
+          <p class="lead">很抱歉，您的支付未能完成</p>
+        </div>
+        
+        <div class="error-details">
+          <h5>错误详情</h5>
+          <p class="error-message" id="error-message">支付处理过程中发生错误</p>
+          <p>交易参考号: <span id="transaction-id">TXN-ERROR</span></p>
+        </div>
+        
+        <div class="help-section">
+          <h5 class="help-title">可能的原因和解决方法</h5>
+          <ul class="help-list">
+            <li>您的银行卡可能被拒绝授权，请检查账户余额或尝试其他支付方式</li>
+            <li>网络连接不稳定，请确保您的网络连接畅通</li>
+            <li>银行系统维护或处理延迟，请稍后再试</li>
+            <li>支付信息输入有误，请仔细检查您输入的信息</li>
+          </ul>
+        </div>
+        
+        <div class="text-center">
+          <p>如需帮助，请联系我们的客户支持团队。</p>
+          <div class="mt-4">
+            <a href="index.html#pricing" class="btn btn-primary">重新尝试</a>
+            <a href="mailto:support@aitravel.com" class="btn btn-outline-secondary ms-2">联系客服</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="py-4 bg-dark text-white">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <h5>关于我们</h5>
+          <p class="small">AI行程是一家专注于利用人工智能技术提升旅行体验的创新公司，致力于为用户提供个性化、高效的旅行规划服务。</p>
+        </div>
+        <div class="col-md-4 mb-3">
+          <h5>联系方式</h5>
+          <ul class="list-unstyled small">
+            <li><i class="fas fa-envelope me-2"></i>support@aitravel.com</li>
+            <li><i class="fas fa-phone me-2"></i>400-123-4567</li>
+            <li><i class="fas fa-map-marker-alt me-2"></i>北京市朝阳区创新大厦B座</li>
+          </ul>
+        </div>
+        <div class="col-md-4 mb-3">
+          <h5>关注我们</h5>
+          <div class="d-flex gap-2">
+            <a href="#" class="text-white"><i class="fab fa-weixin fa-lg"></i></a>
+            <a href="#" class="text-white"><i class="fab fa-weibo fa-lg"></i></a>
+            <a href="#" class="text-white"><i class="fab fa-qq fa-lg"></i></a>
+            <a href="#" class="text-white"><i class="fab fa-tiktok fa-lg"></i></a>
+          </div>
+        </div>
+      </div>
+      <hr>
+      <div class="text-center small">
+        <p class="mb-0">&copy; 2023 AI行程. 保留所有权利.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 从URL中获取错误信息
+      const urlParams = new URLSearchParams(window.location.search);
+      const errorCode = urlParams.get('code') || '';
+      const errorMessage = urlParams.get('message') || '支付处理过程中发生错误';
+      const transactionId = urlParams.get('txn') || `ERROR-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+      
+      // 显示错误信息
+      document.getElementById('error-message').textContent = errorMessage;
+      document.getElementById('transaction-id').textContent = transactionId;
+      
+      // 根据错误代码显示不同的提示（示例）
+      const errorDetails = {
+        'card_declined': '您的卡被拒绝。请检查卡信息或联系您的银行。',
+        'insufficient_funds': '您的账户余额不足，请检查您的账户余额或使用其他支付方式。',
+        'expired_card': '您使用的卡已过期，请使用其他有效卡进行支付。',
+        'processing_error': '处理您的支付时发生错误，请稍后再试。',
+        'network_error': '网络连接出现问题，请检查您的网络连接后重试。'
+      };
+      
+      if (errorCode && errorDetails[errorCode]) {
+        document.getElementById('error-message').textContent = errorDetails[errorCode];
+      }
+    });
+  </script>
+</body>
+</html> 
