@@ -14,6 +14,17 @@ let clientSecret = null;
 document.addEventListener('DOMContentLoaded', () => {
   console.log('支付系统初始化中...');
   
+  // 添加快速支付提示
+  const cardHeader = document.querySelector('.card-header');
+  if (cardHeader) {
+    const quickPayBadge = document.createElement('span');
+    quickPayBadge.className = 'badge bg-warning position-absolute top-0 end-0 mt-2 me-2';
+    quickPayBadge.textContent = '快速支付';
+    quickPayBadge.style.fontSize = '0.8rem';
+    cardHeader.style.position = 'relative';
+    cardHeader.appendChild(quickPayBadge);
+  }
+  
   // 绑定提交按钮事件
   const submitButton = document.getElementById('submit-button');
   if (submitButton) {
@@ -85,18 +96,13 @@ function selectPlan(plan, amount, currency) {
 async function handleSubmit(event) {
   event.preventDefault();
   
-  // 获取表单元素
-  const firstName = document.getElementById('firstName').value;
-  const lastName = document.getElementById('lastName').value;
-  const email = document.getElementById('email').value;
-  const phone = document.getElementById('phone').value;
+  // 获取表单元素（如果有）
+  const firstName = document.getElementById('firstName')?.value || '未提供';
+  const lastName = document.getElementById('lastName')?.value || '未提供';
+  const email = document.getElementById('email')?.value || 'anonymous@example.com';
+  const phone = document.getElementById('phone')?.value || '未提供';
   
-  // 验证表单
-  if (!firstName || !lastName || !email || !phone) {
-    showMessage('请填写所有必填字段', 'danger');
-    return;
-  }
-  
+  // 仅验证是否选择了套餐
   if (!selectedPlan || selectedAmount <= 0) {
     showMessage('请选择订阅计划', 'danger');
     return;
