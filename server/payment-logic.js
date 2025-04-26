@@ -212,56 +212,68 @@ async function getPaymentIntent(intentId, config) {
 
 /**
  * 确认支付意图
- * @param {Object} data 确认参数
+ * @param {Object} paymentData 支付数据
  * @param {Object} config API配置
  * @returns {Promise<Object>} 确认结果
  */
-async function confirmPaymentIntent(data, config) {
+async function confirmPaymentIntent(paymentData, config) {
   try {
-    if (!data.intent_id) {
+    // 验证必要参数
+    if (!paymentData.intent_id) {
       throw new Error('缺少支付意图ID');
     }
-    
-    if (!data.payment_method) {
+
+    if (!paymentData.payment_method) {
       throw new Error('缺少支付方式');
     }
-    
+
     // 获取令牌
     const token = await getApiToken(config);
     
-    console.log(`确认支付意图... ID: ${data.intent_id}, 方式: ${data.payment_method}`);
+    console.log(`确认支付意图... ID: ${paymentData.intent_id}, 方式: ${paymentData.payment_method}`);
+    
+    // 构建请求URL
+    const apiUrl = `${config.API_BASE}/api/v1/pa/payment_intents/${paymentData.intent_id}/confirm`;
     
     // 准备请求数据
     const requestData = {
-      request_id: `req_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
+      request_id: `req_confirm_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
       payment_method: {
-        type: data.payment_method,
-        ...data.payment_method_data
+        type: paymentData.payment_method
       }
     };
-    
-    // 某些支付方式需要特殊处理
-    if (data.payment_method === 'card' && data.payment_method_data) {
-      requestData.payment_method = {
-        type: 'card',
-        card: data.payment_method_data
-      };
+
+    // 根据支付方式添加特定参数
+    switch (paymentData.payment_method) {
+      case 'card':
+        if (paymentData.payment_method_data && paymentData.payment_method_data.card) {
+          requestData.payment_method.card = paymentData.payment_method_data.card;
+        }
+        break;
+      case 'alipay':
+      case 'wechat':
+      case 'unionpay':
+      case 'paypal':
+        if (paymentData.payment_method_data && paymentData.payment_method_data.return_url) {
+          requestData.payment_method[paymentData.payment_method] = {
+            return_url: paymentData.payment_method_data.return_url
+          };
+        }
+        break;
     }
-    
-    console.log('发送确认支付请求数据:', JSON.stringify(requestData));
-    
+
     // 发送请求
     const response = await axios({
       method: 'post',
-      url: `${config.API_BASE}/api/v1/pa/payment_intents/${data.intent_id}/confirm`,
+      url: apiUrl,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
       data: requestData
     });
-    
-    console.log('支付确认结果:', response.data);
+
+    console.log('支付确认成功，状态:', response.data.status);
     return response.data;
   } catch (error) {
     console.error('确认支付意图错误:', error.response?.data || error.message);

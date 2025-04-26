@@ -1095,150 +1095,202 @@ console.log('payment-methods.js 完全加载');
 
 /**
  * 处理信用卡支付
+ * @returns {Promise<void>}
  */
 async function processCardPayment() {
   try {
-    // 验证信用卡表单
-    const cardInfo = validateCardFields();
-    if (!cardInfo.valid) {
-      throw new Error(cardInfo.error || '请检查信用卡信息');
-    }
-    
     console.log('处理信用卡支付...');
     
-    // 构建支付参数
-    const cardData = {
-      card_number: cardInfo.cardNumber,
-      expiry_month: cardInfo.expiryMonth,
-      expiry_year: cardInfo.expiryYear,
-      cvc: cardInfo.cvc,
-      name: cardInfo.cardholderName
+    // 禁用支付按钮
+    const payButton = document.getElementById('payment-button');
+    if (payButton) {
+      payButton.disabled = true;
+      payButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+    }
+    
+    // 清除错误信息
+    hideError();
+    
+    // 验证表单
+    const cardNumber = document.getElementById('card-number').value.replace(/\s/g, '');
+    const cardExpiry = document.getElementById('card-expiry').value.trim();
+    const cardCvc = document.getElementById('card-cvc').value.trim();
+    const cardHolder = document.getElementById('card-holder').value.trim();
+    
+    // 基础验证
+    if (!cardNumber || cardNumber.length < 12) {
+      throw new Error('请输入有效的信用卡号');
+    }
+    
+    if (!cardExpiry || !/^\d{2}\/\d{2}$/.test(cardExpiry)) {
+      throw new Error('请输入有效的到期日期 (MM/YY)');
+    }
+    
+    if (!cardCvc || !/^\d{3,4}$/.test(cardCvc)) {
+      throw new Error('请输入有效的安全码');
+    }
+    
+    if (!cardHolder) {
+      throw new Error('请输入持卡人姓名');
+    }
+    
+    // 分解有效期
+    const [expMonth, expYear] = cardExpiry.split('/');
+    
+    // 获取支付意图
+    if (!window.paymentIntent || !window.paymentIntent.id) {
+      throw new Error('支付初始化失败，请刷新页面重试');
+    }
+    
+    // 构建支付请求参数
+    const paymentParams = {
+      intent_id: window.paymentIntent.id,
+      client_secret: window.paymentIntent.client_secret,
+      payment_method: 'card',
+      payment_method_data: {
+        card: {
+          number: cardNumber,
+          expiry_month: expMonth,
+          expiry_year: expYear,
+          cvc: cardCvc,
+          name: cardHolder
+        }
+      }
     };
     
-    // 确认支付
-    try {
-      const result = await window.confirmPayment({
-        intent_id: paymentIntent.id,
-        payment_method: 'card',
-        card_details: cardData
-      });
+    console.log('发送信用卡支付请求...');
+    
+    // 调用API
+    const response = await fetch('/api/confirm-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(paymentParams)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || '支付处理失败，请重试');
+    }
+    
+    const result = await response.json();
+    
+    // 处理支付结果
+    if (result.status === 'SUCCEEDED') {
+      // 支付成功
+      showSuccess('支付成功！正在跳转...');
       
-      console.log('支付结果:', result);
+      // 跳转到成功页面
+      setTimeout(() => {
+        window.location.href = `/payment-success.html?txn_id=${result.id}`;
+      }, 2000);
+    } else if (result.status === 'REQUIRES_ACTION' && result.next_action) {
+      // 需要额外操作
+      handleNextAction(result);
+    } else {
+      // 其他状态
+      showSuccess('支付请求已提交，请查看结果');
       
-      // 处理支付结果
-      if (result && (result.status === 'SUCCEEDED' || result.status === 'CAPTURED')) {
-        showSuccess('支付成功!');
-        
-        // 跳转到支付成功页面
-        setTimeout(() => {
-          window.location.href = `./payment-success.html?txn_id=${paymentIntent.id}`;
-        }, 1500);
-      } else if (result.next_action) {
-        // 处理3DS验证等额外步骤
-        handleNextAction(result.next_action);
-      } else {
-        showError('支付未完成，请稍后检查交易状态');
-      }
-      
-    } catch (error) {
-      console.error('信用卡支付错误:', error);
-      throw new Error(error.message || '支付处理失败，请重试');
+      // 设置轮询检查支付状态
+      startPaymentStatusCheck(result.id);
     }
   } catch (error) {
-    console.error('处理信用卡支付失败:', error);
-    showError(error.message);
-    throw error;
+    console.error('信用卡支付失败:', error);
+    showError(error.message || '支付处理失败，请重试');
+    
+    // 恢复按钮状态
+    const payButton = document.getElementById('payment-button');
+    if (payButton) {
+      payButton.disabled = false;
+      payButton.textContent = `确认支付 ¥${getOrderTotal()}`;
+    }
   }
 }
 
 /**
- * 验证信用卡字段
- * @returns {Object} 验证结果
+ * 处理需要额外操作的支付
+ * @param {Object} result - 支付结果
  */
-function validateCardFields() {
-  const cardholderName = document.getElementById('card-holder')?.value?.trim();
-  const cardNumber = document.getElementById('card-number')?.value?.replace(/\s+/g, '');
-  const cardExpiry = document.getElementById('card-expiry')?.value?.trim();
-  const cardCvc = document.getElementById('card-cvc')?.value?.trim();
-  
-  // 检查持卡人姓名
-  if (!cardholderName) {
-    return { valid: false, error: '请输入持卡人姓名' };
+function handleNextAction(result) {
+  if (result.next_action.type === '3ds') {
+    // 需要3DS验证
+    window.location.href = result.next_action.url;
+  } else if (result.next_action.type === 'redirect') {
+    // 需要重定向到第三方页面
+    window.location.href = result.next_action.url;
+  } else if (result.next_action.type === 'qrcode') {
+    // 需要显示二维码
+    showQRCode(result.next_action.data);
   }
-  
-  // 检查卡号
-  if (!cardNumber || cardNumber.length < 14 || cardNumber.length > 19) {
-    return { valid: false, error: '请输入有效的卡号' };
-  }
-  
-  // 检查有效期
-  if (!cardExpiry || !cardExpiry.includes('/')) {
-    return { valid: false, error: '请输入有效的到期日期 (MM/YY)' };
-  }
-  
-  // 解析月份和年份
-  const [expiryMonth, expiryYear] = cardExpiry.split('/');
-  if (!expiryMonth || !expiryYear || 
-      isNaN(parseInt(expiryMonth)) || isNaN(parseInt(expiryYear)) ||
-      parseInt(expiryMonth) < 1 || parseInt(expiryMonth) > 12) {
-    return { valid: false, error: '请输入有效的到期日期 (MM/YY)' };
-  }
-  
-  // 检查CVC
-  if (!cardCvc || cardCvc.length < 3 || cardCvc.length > 4 || isNaN(parseInt(cardCvc))) {
-    return { valid: false, error: '请输入有效的安全码' };
-  }
-  
-  // 所有验证通过
-  return {
-    valid: true,
-    cardholderName,
-    cardNumber,
-    expiryMonth,
-    expiryYear,
-    cvc: cardCvc
-  };
 }
 
 /**
- * 处理支付后的下一步操作
- * @param {Object} nextAction - 下一步操作
+ * 开始轮询检查支付状态
+ * @param {string} intentId - 支付意图ID
  */
-function handleNextAction(nextAction) {
-  if (!nextAction || !nextAction.type) {
-    console.error('无效的nextAction对象');
-    return;
-  }
+function startPaymentStatusCheck(intentId) {
+  let checkCount = 0;
+  const maxChecks = 10;
   
-  console.log('处理下一步操作:', nextAction);
-  
-  switch (nextAction.type) {
-    case 'redirect':
-      // 跳转到第三方页面
-      showSuccess('正在跳转到支付页面...');
-      setTimeout(() => {
-        window.location.href = nextAction.url;
-      }, 1000);
-      break;
+  const checkInterval = setInterval(async () => {
+    try {
+      checkCount++;
+      console.log(`检查支付状态 (${checkCount}/${maxChecks})...`);
       
-    case 'qrcode':
-      // 显示二维码
-      if (nextAction.qrcode_data) {
-        showQRCode(nextAction.qrcode_data);
-      } else {
-        showError('无法生成二维码，请重试');
+      const response = await fetch(`/api/payment-intent/${intentId}`);
+      
+      if (!response.ok) {
+        throw new Error('查询支付状态失败');
       }
-      break;
       
-    case '3ds':
-      // 处理3DS验证
-      showSuccess('请完成安全验证...');
-      // 这里需要Airwallex的3DS处理逻辑
-      break;
+      const result = await response.json();
       
-    default:
-      showError(`不支持的操作类型: ${nextAction.type}`);
-  }
+      if (result.status === 'SUCCEEDED') {
+        // 支付成功
+        clearInterval(checkInterval);
+        showSuccess('支付成功！正在跳转...');
+        
+        setTimeout(() => {
+          window.location.href = `/payment-success.html?txn_id=${intentId}`;
+        }, 2000);
+      } else if (result.status === 'FAILED') {
+        // 支付失败
+        clearInterval(checkInterval);
+        showError('支付失败，请重试');
+        
+        // 恢复按钮状态
+        const payButton = document.getElementById('payment-button');
+        if (payButton) {
+          payButton.disabled = false;
+          payButton.textContent = `确认支付 ¥${getOrderTotal()}`;
+        }
+      } else if (checkCount >= maxChecks) {
+        // 检查次数达到上限
+        clearInterval(checkInterval);
+        showError('支付状态未确认，请稍后查看订单');
+        
+        // 恢复按钮状态
+        const payButton = document.getElementById('payment-button');
+        if (payButton) {
+          payButton.disabled = false;
+          payButton.textContent = `确认支付 ¥${getOrderTotal()}`;
+        }
+      }
+    } catch (error) {
+      console.error('检查支付状态失败:', error);
+      
+      if (checkCount >= maxChecks) {
+        clearInterval(checkInterval);
+        showError('无法确认支付状态，请联系客服');
+        
+        // 恢复按钮状态
+        const payButton = document.getElementById('payment-button');
+        if (payButton) {
+          payButton.disabled = false;
+          payButton.textContent = `确认支付 ¥${getOrderTotal()}`;
+        }
+      }
+    }
+  }, 3000); // 每3秒检查一次
 }
 
 /**
@@ -1292,4 +1344,279 @@ function showQRCode(qrcodeData) {
   
   // 启动支付状态检查
   startWechatPaymentStatusCheck(paymentIntent.id);
+}
+
+/**
+ * 处理支付宝支付
+ * @returns {Promise<void>}
+ */
+async function processAlipayPayment() {
+  try {
+    console.log('处理支付宝支付...');
+    
+    // 禁用支付按钮
+    const payButton = document.getElementById('payment-button');
+    if (payButton) {
+      payButton.disabled = true;
+      payButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在跳转到支付宝...';
+    }
+    
+    // 清除错误信息
+    hideError();
+    
+    // 获取支付意图
+    if (!window.paymentIntent || !window.paymentIntent.id) {
+      throw new Error('支付初始化失败，请刷新页面重试');
+    }
+    
+    // 构建支付请求参数
+    const paymentParams = {
+      intent_id: window.paymentIntent.id,
+      payment_method: 'alipay',
+      payment_method_data: {
+        return_url: `${window.location.origin}/payment-return.html`
+      }
+    };
+    
+    console.log('发送支付宝支付请求...');
+    
+    // 调用API
+    const response = await fetch('/api/confirm-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(paymentParams)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || '支付处理失败，请重试');
+    }
+    
+    const result = await response.json();
+    
+    // 处理支付结果
+    if (result.next_action && result.next_action.url) {
+      // 需要重定向到支付宝
+      showSuccess('正在跳转到支付宝...');
+      window.location.href = result.next_action.url;
+    } else {
+      throw new Error('无法获取支付宝付款链接');
+    }
+  } catch (error) {
+    console.error('支付宝支付失败:', error);
+    showError(error.message || '支付处理失败，请重试');
+    
+    // 恢复按钮状态
+    const payButton = document.getElementById('payment-button');
+    if (payButton) {
+      payButton.disabled = false;
+      payButton.textContent = '使用支付宝支付';
+    }
+  }
+}
+
+/**
+ * 处理微信支付
+ * @returns {Promise<void>}
+ */
+async function processWeChatPayment() {
+  try {
+    console.log('处理微信支付...');
+    
+    // 禁用支付按钮
+    const payButton = document.getElementById('payment-button');
+    if (payButton) {
+      payButton.disabled = true;
+      payButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 生成支付二维码...';
+    }
+    
+    // 清除错误信息
+    hideError();
+    
+    // 获取支付意图
+    if (!window.paymentIntent || !window.paymentIntent.id) {
+      throw new Error('支付初始化失败，请刷新页面重试');
+    }
+    
+    // 构建支付请求参数
+    const paymentParams = {
+      intent_id: window.paymentIntent.id,
+      payment_method: 'wechat',
+      payment_method_data: {
+        return_url: `${window.location.origin}/payment-return.html`
+      }
+    };
+    
+    console.log('发送微信支付请求...');
+    
+    // 调用API
+    const response = await fetch('/api/confirm-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(paymentParams)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || '支付处理失败，请重试');
+    }
+    
+    const result = await response.json();
+    
+    // 处理支付结果
+    if (result.next_action && result.next_action.type === 'qrcode') {
+      // 显示二维码
+      showQRCode(result.next_action.data);
+      
+      // 开始检查支付状态
+      startWechatPaymentStatusCheck(window.paymentIntent.id);
+    } else {
+      throw new Error('无法获取微信支付二维码');
+    }
+  } catch (error) {
+    console.error('微信支付失败:', error);
+    showError(error.message || '支付处理失败，请重试');
+    
+    // 恢复按钮状态
+    const payButton = document.getElementById('payment-button');
+    if (payButton) {
+      payButton.disabled = false;
+      payButton.textContent = '使用微信支付';
+    }
+  }
+}
+
+/**
+ * 显示微信支付二维码
+ * @param {string} qrcodeData - 二维码数据
+ */
+function showQRCode(qrcodeData) {
+  // 获取微信表单容器
+  const wechatForm = document.getElementById('wechat-form');
+  
+  if (!wechatForm) {
+    console.error('未找到微信表单容器');
+    return;
+  }
+  
+  // 检查是否已有二维码容器
+  let qrcodeContainer = document.getElementById('wechat-qrcode');
+  
+  if (!qrcodeContainer) {
+    // 创建二维码容器
+    qrcodeContainer = document.createElement('div');
+    qrcodeContainer.id = 'wechat-qrcode';
+    qrcodeContainer.style.cssText = 'width: 200px; height: 200px; margin: 0 auto; background: #f8f9fa; border: 1px solid #ddd; padding: 10px; box-sizing: content-box;';
+    
+    // 插入表单容器
+    wechatForm.querySelector('.form-group').appendChild(qrcodeContainer);
+  }
+  
+  // 清空容器
+  qrcodeContainer.innerHTML = '';
+  
+  // 创建图片元素
+  const qrImage = document.createElement('img');
+  qrImage.src = qrcodeData;
+  qrImage.alt = '微信支付二维码';
+  qrImage.style.cssText = 'width: 100%; height: 100%;';
+  
+  // 添加到容器
+  qrcodeContainer.appendChild(qrImage);
+  
+  // 创建提示文本
+  const helpText = document.createElement('p');
+  helpText.textContent = '请使用微信扫描二维码完成支付';
+  helpText.style.cssText = 'text-align: center; margin-top: 10px; color: #333;';
+  
+  // 添加到容器
+  wechatForm.querySelector('.form-group').appendChild(helpText);
+  
+  // 隐藏支付按钮
+  const payButton = document.getElementById('payment-button');
+  if (payButton) {
+    payButton.style.display = 'none';
+  }
+  
+  // 创建关闭按钮
+  const closeButton = document.createElement('button');
+  closeButton.textContent = '取消支付';
+  closeButton.className = 'payment-button';
+  closeButton.style.cssText = 'background-color: #6c757d; margin-top: 15px;';
+  closeButton.onclick = function() {
+    // 隐藏二维码
+    qrcodeContainer.style.display = 'none';
+    helpText.style.display = 'none';
+    closeButton.style.display = 'none';
+    
+    // 显示支付按钮
+    if (payButton) {
+      payButton.style.display = 'block';
+      payButton.disabled = false;
+      payButton.textContent = '使用微信支付';
+    }
+  };
+  
+  // 添加到容器
+  wechatForm.querySelector('.form-group').appendChild(closeButton);
+}
+
+/**
+ * 开始微信支付状态检查
+ * @param {string} intentId - 支付意图ID
+ */
+function startWechatPaymentStatusCheck(intentId) {
+  let checkCount = 0;
+  const maxChecks = 30; // 最多检查30次，每次间隔2秒，总共最多检查60秒
+  
+  const statusCheckInterval = setInterval(async () => {
+    try {
+      checkCount++;
+      console.log(`检查微信支付状态 (${checkCount}/${maxChecks})...`);
+      
+      // 调用API检查支付状态
+      const response = await fetch(`/api/payment-intent/${intentId}`);
+      
+      if (!response.ok) {
+        throw new Error('查询支付状态失败');
+      }
+      
+      const result = await response.json();
+      
+      // 根据支付状态处理
+      if (result.status === 'SUCCEEDED') {
+        // 支付成功
+        clearInterval(statusCheckInterval);
+        showSuccess('支付成功！正在跳转...');
+        
+        // 跳转到成功页面
+        setTimeout(() => {
+          window.location.href = `/payment-success.html?txn_id=${intentId}`;
+        }, 2000);
+      } else if (result.status === 'FAILED') {
+        // 支付失败
+        clearInterval(statusCheckInterval);
+        showError('支付失败，请重试');
+        
+        // 恢复UI
+        document.getElementById('wechat-qrcode').style.display = 'none';
+        const payButton = document.getElementById('payment-button');
+        if (payButton) {
+          payButton.style.display = 'block';
+          payButton.disabled = false;
+          payButton.textContent = '使用微信支付';
+        }
+      } else if (checkCount >= maxChecks) {
+        // 超过最大检查次数
+        clearInterval(statusCheckInterval);
+        showError('支付未完成，请稍后查看订单状态');
+      }
+    } catch (error) {
+      console.error('检查微信支付状态失败:', error);
+      
+      if (checkCount >= maxChecks) {
+        clearInterval(statusCheckInterval);
+      }
+    }
+  }, 2000); // 每2秒检查一次
 } 

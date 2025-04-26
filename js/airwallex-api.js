@@ -11,7 +11,6 @@ let elementInstances = {}; // 存储已创建的元素实例
 const AIRWALLEX_CONFIG = {
   env: 'prod', // 环境: 'demo', 'prod'
   origin: window.location.origin, // 用于验证的域名
-  // apiKey从环境变量中获取，不在前端直接设置
 };
 
 /**
@@ -111,7 +110,7 @@ async function confirmPaymentIntent(params) {
     }
     
     // 调用后端API确认支付
-    const apiUrl = '/api/confirm-payment-intent';
+    const apiUrl = '/api/confirm-payment';
     console.log('确认支付意图:', params);
     
     const response = await fetch(apiUrl, {
@@ -133,36 +132,29 @@ async function confirmPaymentIntent(params) {
 }
 
 /**
- * 确认信用卡支付
+ * 确认信用卡支付 - 直接使用Airwallex SDK
  * @param {Object} params - 支付参数
  * @returns {Promise<Object>} - 支付结果
  */
 async function confirmCardPayment(params) {
-  // 检查卡信息
-  if (!params.card_details) {
-    throw new Error('缺少卡片信息');
-  }
-  
   try {
-    console.log('确认卡支付:', params);
-    
-    // 调用后端API确认支付
-    const response = await fetch('/api/confirm-payment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        intent_id: params.intent_id,
-        payment_method: 'card',
-        payment_method_data: params.card_details
-      })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || '信用卡支付处理失败，请重试');
+    // 验证必要参数
+    if (!params.card_details) {
+      throw new Error('缺少卡片信息');
     }
     
-    return await response.json();
+    // 使用SDK的confirmPaymentIntent方法
+    const result = await Airwallex.confirmPaymentIntent({
+      element: elementInstances.card,
+      id: params.intent_id,
+      client_secret: params.client_secret,
+      payment_method: {
+        type: 'card',
+        card: params.card_details
+      }
+    });
+    
+    return result;
   } catch (error) {
     console.error('卡支付失败:', error);
     throw error;
@@ -170,77 +162,33 @@ async function confirmCardPayment(params) {
 }
 
 /**
- * 确认重定向支付（支付宝、PayPal、银联等）
- * @param {Object} params - 支付参数
- * @param {string} method - 支付方式
- * @returns {Promise<Object>} - 支付结果
+ * 创建Airwallex元素
+ * @param {string} type - 元素类型
+ * @param {Object} options - 元素选项
+ * @returns {Object} - 创建的元素
  */
-async function confirmRedirectPayment(params, method) {
+function createElement(type, options = {}) {
   try {
-    console.log(`确认${method}支付:`, params);
-    
-    // 获取当前域名作为返回地址
-    const returnUrl = params.payment_method_options?.[method]?.return_url || 
-                      `${window.location.origin}/payment-return.html`;
-    
-    // 调用后端API
-    const response = await fetch('/api/confirm-payment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        intent_id: params.intent_id,
-        payment_method: method,
-        payment_method_data: {
-          return_url: returnUrl
-        }
-      })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `${method}支付处理失败，请重试`);
+    if (!Airwallex) {
+      throw new Error('Airwallex SDK未初始化');
     }
     
-    return await response.json();
+    const element = Airwallex.createElement(type, options);
+    elementInstances[type] = element;
+    return element;
   } catch (error) {
-    console.error(`${method}支付失败:`, error);
+    console.error(`创建${type}元素失败:`, error);
     throw error;
   }
 }
 
 /**
- * 确认微信支付
- * @param {Object} params - 支付参数
- * @returns {Promise<Object>} - 支付结果
+ * 获取创建的元素
+ * @param {string} type - 元素类型
+ * @returns {Object|null} - 元素实例
  */
-async function confirmWeChatPayment(params) {
-  try {
-    console.log('确认微信支付:', params);
-    
-    // 调用后端API
-    const response = await fetch('/api/confirm-payment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        intent_id: params.intent_id,
-        payment_method: 'wechat',
-        payment_method_data: {
-          return_url: params.payment_method_options?.wechat?.return_url || 
-                      `${window.location.origin}/payment-return.html`
-        }
-      })
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || '微信支付处理失败，请重试');
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('微信支付失败:', error);
-    throw error;
-  }
+function getElement(type) {
+  return elementInstances[type] || null;
 }
 
 /**
@@ -250,19 +198,10 @@ async function confirmWeChatPayment(params) {
  */
 async function checkPaymentStatus(intentId) {
   try {
-    if (!intentId) {
-      throw new Error('缺少支付意图ID');
-    }
-    
-    // 调用后端API查询支付状态
     const apiUrl = `/api/payment-intent/${intentId}`;
     console.log('检查支付状态:', intentId);
     
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    
+    const response = await fetch(apiUrl);
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || '查询支付状态失败');
@@ -275,18 +214,13 @@ async function checkPaymentStatus(intentId) {
   }
 }
 
-/**
- * 生成随机ID
- * @returns {string} - 随机ID
- */
-function generateRandomId() {
-  return Math.random().toString(36).substring(2, 15);
-}
-
 // 导出模块方法
 export {
   init,
   createPaymentIntent,
   confirmPaymentIntent,
+  confirmCardPayment,
+  createElement,
+  getElement,
   checkPaymentStatus
 }; 
