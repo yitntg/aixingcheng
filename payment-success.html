@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付成功 - 智慧旅行</title>
+    <link rel="stylesheet" href="css_new/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
+    <style>
+        .success-page {
+            min-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 50px 20px;
+        }
+        
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background-color: rgba(46, 204, 113, 0.2);
+            color: var(--success-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .success-icon i {
+            font-size: 3rem;
+        }
+        
+        .success-page h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--dark-color);
+        }
+        
+        .success-page p {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 15px;
+            max-width: 600px;
+        }
+        
+        .order-info {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin: 30px 0;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .order-info h3 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .order-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .order-detail .label {
+            color: #666;
+        }
+        
+        .buttons {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>智慧旅行</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html#home">首页</a></li>
+                    <li><a href="index.html#features">功能</a></li>
+                    <li><a href="index.html#plans">订阅计划</a></li>
+                    <li><a href="index.html#faq">常见问题</a></li>
+                    <li><a href="index.html#contact">联系我们</a></li>
+                </ul>
+            </nav>
+            <div class="mobile-menu">
+                <i class="ri-menu-line"></i>
+            </div>
+        </div>
+    </header>
+
+    <main class="success-page">
+        <div class="success-icon">
+            <i class="ri-check-line"></i>
+        </div>
+        <h1>支付成功！</h1>
+        <p>感谢您订阅智慧旅行。您的账户已激活，现在可以开始使用我们的服务了。</p>
+        <p>订阅确认邮件已发送至您的邮箱。</p>
+        
+        <div class="order-info">
+            <h3>订单信息</h3>
+            <div class="order-detail">
+                <span class="label">订单编号:</span>
+                <span class="value" id="order-id">ORD20230426789</span>
+            </div>
+            <div class="order-detail">
+                <span class="label">套餐:</span>
+                <span class="value" id="plan-name">高级版</span>
+            </div>
+            <div class="order-detail">
+                <span class="label">金额:</span>
+                <span class="value" id="amount">¥199</span>
+            </div>
+            <div class="order-detail">
+                <span class="label">支付时间:</span>
+                <span class="value" id="payment-time">2023年4月26日 15:30</span>
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <a href="index.html" class="btn btn-primary">返回首页</a>
+            <a href="#" class="btn btn-outline">管理订阅</a>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h2>智慧旅行</h2>
+                    <p>用AI重新定义旅行体验</p>
+                </div>
+                <div class="footer-links">
+                    <div class="link-group">
+                        <h3>产品</h3>
+                        <ul>
+                            <li><a href="index.html#features">功能介绍</a></li>
+                            <li><a href="index.html#plans">订阅计划</a></li>
+                            <li><a href="index.html#faq">常见问题</a></li>
+                        </ul>
+                    </div>
+                    <div class="link-group">
+                        <h3>支持</h3>
+                        <ul>
+                            <li><a href="#">帮助中心</a></li>
+                            <li><a href="#">使用教程</a></li>
+                            <li><a href="index.html#contact">联系我们</a></li>
+                        </ul>
+                    </div>
+                    <div class="link-group">
+                        <h3>法律</h3>
+                        <ul>
+                            <li><a href="#">隐私政策</a></li>
+                            <li><a href="#">服务条款</a></li>
+                            <li><a href="#">退款政策</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 智慧旅行科技有限公司 - 保留所有权利</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 从URL参数中获取订单信息
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('order_id');
+            const planName = urlParams.get('plan_name');
+            const amount = urlParams.get('amount');
+            
+            // 如果URL中有参数，则显示对应信息
+            if (orderId) {
+                document.getElementById('order-id').textContent = orderId;
+            }
+            
+            if (planName) {
+                document.getElementById('plan-name').textContent = planName;
+            }
+            
+            if (amount) {
+                document.getElementById('amount').textContent = '¥' + amount;
+            }
+            
+            // 显示当前时间
+            const now = new Date();
+            const formattedDate = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+            document.getElementById('payment-time').textContent = formattedDate;
+        });
+    </script>
+</body>
+</html> 
