@@ -10,12 +10,17 @@ let currentPaymentMethod = 'card';
  */
 document.addEventListener('DOMContentLoaded', function() {
   console.log('payment-methods.js: DOM加载完成，准备设置支付方式切换');
-  setupPaymentMethodSwitcher();
-  setupTestData();
-  setupApplePayButton();
-  setupGooglePayButton();
-  // 支付按钮由airwallex-integration.js处理
-  // setupPaymentButton();
+  try {
+    setupPaymentMethodSwitcher();
+    setupTestData();
+    setupApplePayButton();
+    setupGooglePayButton();
+    // 支付按钮由airwallex-integration.js处理
+    // setupPaymentButton();
+    console.log('payment-methods.js: 所有初始化函数执行完成');
+  } catch (error) {
+    console.error('payment-methods.js: 初始化过程中发生错误:', error);
+  }
 });
 
 /**
@@ -28,6 +33,28 @@ function setupPaymentMethodSwitcher() {
   
   console.log(`找到${paymentMethods.length}个支付方式和${paymentForms.length}个支付表单`);
   
+  if (paymentMethods.length === 0) {
+    console.error('payment-methods.js: 未找到任何支付方式元素，选择器可能不正确');
+    return;
+  }
+  
+  if (paymentForms.length === 0) {
+    console.error('payment-methods.js: 未找到任何支付表单元素，选择器可能不正确');
+    return;
+  }
+  
+  // 记录所有支付方式和表单ID，以便调试
+  console.log('支付方式元素:');
+  paymentMethods.forEach(method => {
+    const methodType = method.getAttribute('data-method');
+    console.log(`- 方式: ${methodType}, ID: ${method.id}, 类名: ${method.className}`);
+  });
+  
+  console.log('支付表单元素:');
+  paymentForms.forEach(form => {
+    console.log(`- 表单ID: ${form.id}, 类名: ${form.className}`);
+  });
+  
   paymentMethods.forEach(method => {
     const methodType = method.getAttribute('data-method');
     console.log(`为支付方式 ${methodType} 绑定点击事件`);
@@ -35,31 +62,60 @@ function setupPaymentMethodSwitcher() {
     method.addEventListener('click', function() {
       console.log(`支付方式 ${methodType} 被点击`);
       
-      // 移除所有活跃状态
-      paymentMethods.forEach(m => m.classList.remove('active'));
-      paymentForms.forEach(f => f.classList.add('hidden'));
-      
-      // 设置当前选中的支付方式
-      this.classList.add('active');
-      currentPaymentMethod = this.getAttribute('data-method');
-      console.log(`payment-methods.js: 当前支付方式设置为 ${currentPaymentMethod}`);
-      
-      // 显示对应的表单
-      const formId = `${currentPaymentMethod}-form`;
-      const form = document.getElementById(formId);
-      
-      if (form) {
-        console.log(`找到并显示表单: ${formId}`);
-        form.classList.remove('hidden');
-      } else {
-        console.error(`未找到支付表单: ${formId}`);
-      }
-      
-      // 更新按钮文本
-      updatePaymentButtonText();
+      try {
+        // 移除所有活跃状态
+        paymentMethods.forEach(m => m.classList.remove('active'));
+        paymentForms.forEach(f => f.classList.add('hidden'));
+        
+        // 设置当前选中的支付方式
+        this.classList.add('active');
+        currentPaymentMethod = this.getAttribute('data-method');
+        console.log(`payment-methods.js: 当前支付方式设置为 ${currentPaymentMethod}`);
+        
+        // 显示对应的表单
+        const formId = `${currentPaymentMethod}-form`;
+        const form = document.getElementById(formId);
+        
+        if (form) {
+          console.log(`找到并显示表单: ${formId}`);
+          form.classList.remove('hidden');
+        } else {
+          console.error(`未找到支付表单: ${formId}`);
+          console.log(`正在尝试查找其他可能的表单ID格式...`);
+          
+          // 尝试其他可能的表单ID格式
+          const alternativeFormId = `${currentPaymentMethod.replace('-', '_')}-form`;
+          const alternativeForm = document.getElementById(alternativeFormId);
+          
+          if (alternativeForm) {
+            console.log(`找到了替代表单ID: ${alternativeFormId}`);
+            alternativeForm.classList.remove('hidden');
+          } else {
+            console.error(`无法找到任何匹配的表单，可能的表单ID: ${formId}, ${alternativeFormId}`);
+            
+            // 列出所有可用的表单ID进行调试
+            console.log('所有可用的表单ID:');
+            document.querySelectorAll('form, div[id$="-form"]').forEach(el => {
+              console.log(`- ${el.id}`);
+            });
+          }
+        }
+        
+        // 更新按钮文本
+        updatePaymentButtonText();
 
-      // 处理特殊支付方式的UI显示/隐藏
-      handleSpecialPaymentMethods(currentPaymentMethod);
+        // 处理特殊支付方式的UI显示/隐藏
+        handleSpecialPaymentMethods(currentPaymentMethod);
+        
+        // 触发自定义事件，通知其他模块支付方式已更改
+        const event = new CustomEvent('payment-method-change', {
+          detail: { method: currentPaymentMethod }
+        });
+        document.dispatchEvent(event);
+        console.log(`已触发支付方式更改事件: payment-method-change (${currentPaymentMethod})`);
+      } catch (error) {
+        console.error(`支付方式切换过程中发生错误:`, error);
+      }
     });
   });
 }
@@ -69,7 +125,14 @@ function setupPaymentMethodSwitcher() {
  * @param {string} method - 当前选择的支付方式
  */
 function handleSpecialPaymentMethods(method) {
+  console.log(`处理特殊支付方式: ${method}`);
   const paymentButton = document.getElementById('payment-button');
+  
+  if (!paymentButton) {
+    console.error('未找到支付按钮元素，ID: payment-button');
+  } else {
+    console.log('找到支付按钮元素');
+  }
   
   // 重置按钮可见性和其他元素
   paymentButton.style.display = 'block';
@@ -80,6 +143,9 @@ function handleSpecialPaymentMethods(method) {
     const element = document.getElementById(id);
     if (element) {
       element.style.display = 'none';
+      console.log(`隐藏特殊按钮: ${id}`);
+    } else {
+      console.log(`未找到特殊按钮元素: ${id}`);
     }
   });
   
@@ -87,15 +153,23 @@ function handleSpecialPaymentMethods(method) {
   const qrCodeElement = document.getElementById('wechat-qrcode');
   if (qrCodeElement) {
     qrCodeElement.style.display = 'none';
+    console.log('隐藏微信支付二维码');
   }
   
   // 根据支付方式执行特殊逻辑
   switch(method) {
     case 'applepay':
+      console.log('处理Apple Pay支付方式');
       // Apple Pay接口处理
       if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
         console.log('设备支持Apple Pay');
-        document.getElementById('apple-pay-button').style.display = 'flex';
+        const applePayButton = document.getElementById('apple-pay-button');
+        if (applePayButton) {
+          applePayButton.style.display = 'flex';
+          console.log('显示Apple Pay按钮');
+        } else {
+          console.error('未找到Apple Pay按钮元素');
+        }
         
         // 隐藏主支付按钮，使用Apple Pay按钮
         paymentButton.style.display = 'none';
@@ -106,19 +180,30 @@ function handleSpecialPaymentMethods(method) {
         
         // 将支付方式切换回Card
         setTimeout(() => {
+          console.log('尝试切换回信用卡支付方式');
           const cardMethod = document.querySelector('.payment-method[data-method="card"]');
           if (cardMethod) {
+            console.log('找到信用卡支付方式元素，触发点击');
             cardMethod.click();
+          } else {
+            console.error('未找到信用卡支付方式元素');
           }
         }, 500);
       }
       break;
       
     case 'googlepay':
+      console.log('处理Google Pay支付方式');
       // Google Pay接口处理
       if (window.google && window.google.payments) {
         console.log('设备支持Google Pay');
-        document.getElementById('google-pay-button').style.display = 'flex';
+        const googlePayButton = document.getElementById('google-pay-button');
+        if (googlePayButton) {
+          googlePayButton.style.display = 'flex';
+          console.log('显示Google Pay按钮');
+        } else {
+          console.error('未找到Google Pay按钮元素');
+        }
         
         // 隐藏主支付按钮，使用Google Pay按钮
         paymentButton.style.display = 'none';
@@ -129,9 +214,13 @@ function handleSpecialPaymentMethods(method) {
         
         // 将支付方式切换回Card
         setTimeout(() => {
+          console.log('尝试切换回信用卡支付方式');
           const cardMethod = document.querySelector('.payment-method[data-method="card"]');
           if (cardMethod) {
+            console.log('找到信用卡支付方式元素，触发点击');
             cardMethod.click();
+          } else {
+            console.error('未找到信用卡支付方式元素');
           }
         }, 500);
       }
@@ -520,17 +609,64 @@ function startWechatPaymentStatusCheck(intentId) {
 }
 
 /**
- * 设置演示数据
+ * 设置测试数据 - 仅用于开发环境
  */
 function setupTestData() {
-  // 预填充卡片表单以便测试
-  const cardHolder = document.getElementById('card-holder');
-  if (cardHolder) {
-    cardHolder.value = '张三';
+  // 检查是否为开发环境
+  const isDev = window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' ||
+                window.location.hostname.includes('.local');
+  
+  if (!isDev) {
+    console.log('非开发环境，跳过测试数据设置');
+    return;
   }
   
-  // 添加信用卡品牌示例
-  simulateCardBrandDetection();
+  console.log('开发环境，设置测试数据');
+  
+  // 设置测试数据
+  const testCardInfo = {
+    number: '4242424242424242',
+    expiry: '12/25',
+    cvc: '123',
+    name: '测试用户'
+  };
+  
+  // 填充信用卡表单
+  const cardNumberInput = document.getElementById('card-number');
+  const cardExpiryInput = document.getElementById('card-expiry');
+  const cardCvcInput = document.getElementById('card-cvc');
+  const cardNameInput = document.getElementById('card-name');
+  
+  if (cardNumberInput) {
+    console.log('填充信用卡号测试数据');
+    cardNumberInput.value = testCardInfo.number;
+  }
+  
+  if (cardExpiryInput) {
+    console.log('填充信用卡有效期测试数据');
+    cardExpiryInput.value = testCardInfo.expiry;
+  }
+  
+  if (cardCvcInput) {
+    console.log('填充信用卡CVC测试数据');
+    cardCvcInput.value = testCardInfo.cvc;
+  }
+  
+  if (cardNameInput) {
+    console.log('填充持卡人姓名测试数据');
+    cardNameInput.value = testCardInfo.name;
+  }
+  
+  // 创建测试订单总价元素（如果不存在）
+  if (!document.getElementById('order-total')) {
+    console.log('创建测试订单总价元素');
+    const orderTotalElement = document.createElement('div');
+    orderTotalElement.id = 'order-total';
+    orderTotalElement.textContent = '¥199.00';
+    orderTotalElement.style.display = 'none';
+    document.body.appendChild(orderTotalElement);
+  }
 }
 
 /**
@@ -552,45 +688,82 @@ function simulateCardBrandDetection() {
  * 更新支付按钮文本
  */
 function updatePaymentButtonText() {
+  console.log(`更新支付按钮文本，当前支付方式: ${currentPaymentMethod}`);
   const paymentButton = document.getElementById('payment-button');
-  if (!paymentButton) return;
   
-  switch (currentPaymentMethod) {
+  if (!paymentButton) {
+    console.error('未找到支付按钮，无法更新文本');
+    return;
+  }
+  
+  let buttonText = '确认支付';
+  
+  // 根据支付方式设置不同的按钮文本
+  switch(currentPaymentMethod) {
     case 'card':
-      paymentButton.textContent = '确认支付 ¥0.10';
+      buttonText = '确认支付';
       break;
     case 'alipay':
-      paymentButton.textContent = '使用支付宝支付';
+      buttonText = '跳转到支付宝';
       break;
     case 'wechat':
-      paymentButton.textContent = '使用微信支付';
-      break;
-    case 'paypal':
-      paymentButton.textContent = '使用PayPal支付';
-      break;
-    case 'applepay':
-      paymentButton.textContent = '使用Apple Pay支付';
-      break;
-    case 'googlepay':
-      paymentButton.textContent = '使用Google Pay支付';
+      buttonText = '生成微信支付二维码';
       break;
     case 'unionpay':
-      paymentButton.textContent = '使用银联支付';
+      buttonText = '跳转到银联支付';
       break;
+    case 'paypal':
+      buttonText = '跳转到PayPal';
+      break;
+    default:
+      buttonText = '确认支付';
   }
+  
+  console.log(`设置按钮文本为: "${buttonText}"`);
+  paymentButton.textContent = buttonText;
 }
 
 /**
- * 显示错误消息
+ * 显示错误信息
+ * @param {string} message - 错误信息
  */
 function showError(message) {
-  const errorElement = document.getElementById('error-message');
-  if (!errorElement) return;
+  console.error(`payment-methods.js: 显示错误: ${message}`);
+  const errorElement = document.getElementById('payment-error');
+  
+  if (!errorElement) {
+    console.error('未找到错误显示元素，无法显示错误信息');
+    // 创建一个临时错误元素
+    const tempError = document.createElement('div');
+    tempError.id = 'payment-error';
+    tempError.className = 'error-message';
+    tempError.textContent = message;
+    tempError.style.color = 'red';
+    tempError.style.marginTop = '10px';
+    
+    // 尝试将错误信息添加到支付表单容器中
+    const paymentContainer = document.querySelector('.payment-container');
+    if (paymentContainer) {
+      console.log('将临时错误元素添加到支付容器');
+      paymentContainer.appendChild(tempError);
+    } else {
+      console.error('未找到支付容器，无法添加临时错误元素');
+      // 最后尝试添加到body
+      document.body.appendChild(tempError);
+    }
+    return;
+  }
   
   errorElement.textContent = message;
+  errorElement.classList.remove('hidden');
   errorElement.style.display = 'block';
-  errorElement.style.backgroundColor = 'rgba(248, 113, 113, 0.1)';
-  errorElement.style.color = 'var(--danger-color)';
+  
+  // 5秒后自动隐藏错误信息
+  setTimeout(() => {
+    console.log('自动隐藏错误信息');
+    errorElement.classList.add('hidden');
+    errorElement.style.display = 'none';
+  }, 5000);
 }
 
 /**
@@ -607,45 +780,319 @@ function showSuccess(message) {
 }
 
 /**
- * 设置Apple Pay按钮点击事件
+ * 设置Apple Pay按钮
  */
 function setupApplePayButton() {
+  console.log('设置Apple Pay按钮');
   const applePayButton = document.getElementById('apple-pay-button');
-  if (applePayButton) {
+  
+  if (!applePayButton) {
+    console.error('未找到Apple Pay按钮元素');
+    return;
+  }
+  
+  // 检查浏览器是否支持Apple Pay
+  if (window.ApplePaySession && ApplePaySession.canMakePayments()) {
+    console.log('浏览器支持Apple Pay');
+    // 添加点击事件
     applePayButton.addEventListener('click', function() {
-      // 模拟触发主支付按钮
-      document.getElementById('payment-button').click();
+      console.log('Apple Pay按钮被点击');
+      try {
+        // 这里调用Apple Pay API，实际实现依赖于ApplePay集成
+        processApplePayPayment();
+      } catch (error) {
+        console.error('启动Apple Pay支付失败:', error);
+        showError('Apple Pay支付初始化失败，请稍后重试');
+      }
     });
+  } else {
+    console.log('浏览器不支持Apple Pay，隐藏相关元素');
+    // 隐藏Apple Pay选项
+    const applePayMethod = document.querySelector('.payment-method[data-method="applepay"]');
+    if (applePayMethod) {
+      applePayMethod.style.display = 'none';
+      console.log('隐藏Apple Pay支付方式选项');
+    } else {
+      console.warn('未找到Apple Pay支付方式元素');
+    }
   }
 }
 
 /**
- * 设置Google Pay按钮点击事件
+ * 设置Google Pay按钮
  */
 function setupGooglePayButton() {
+  console.log('设置Google Pay按钮');
   const googlePayButton = document.getElementById('google-pay-button');
-  if (googlePayButton) {
+  
+  if (!googlePayButton) {
+    console.error('未找到Google Pay按钮元素');
+    return;
+  }
+  
+  // 检查浏览器是否支持Google Pay
+  if (window.google && window.google.payments) {
+    console.log('浏览器支持Google Pay');
+    // 添加点击事件
     googlePayButton.addEventListener('click', function() {
-      // 模拟触发主支付按钮
-      document.getElementById('payment-button').click();
+      console.log('Google Pay按钮被点击');
+      try {
+        // 这里调用Google Pay API，实际实现依赖于GooglePay集成
+        processGooglePayPayment();
+      } catch (error) {
+        console.error('启动Google Pay支付失败:', error);
+        showError('Google Pay支付初始化失败，请稍后重试');
+      }
     });
+  } else {
+    console.log('浏览器不支持Google Pay，隐藏相关元素');
+    // 隐藏Google Pay选项
+    const googlePayMethod = document.querySelector('.payment-method[data-method="googlepay"]');
+    if (googlePayMethod) {
+      googlePayMethod.style.display = 'none';
+      console.log('隐藏Google Pay支付方式选项');
+    } else {
+      console.warn('未找到Google Pay支付方式元素');
+    }
   }
 }
 
-// 执行初始化
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', function() {
-    setupApplePayButton();
-    setupGooglePayButton();
-  });
-} else {
-  setupApplePayButton();
-  setupGooglePayButton();
+/**
+ * 处理Apple Pay支付
+ * @returns {Promise<Object>} 支付结果
+ */
+async function processApplePayPayment() {
+  console.log('开始处理Apple Pay支付请求');
+  
+  try {
+    // 检查Apple Pay支持状态
+    if (!window.ApplePaySession || !ApplePaySession.canMakePayments()) {
+      console.error('当前设备或浏览器不支持Apple Pay');
+      showError('您的设备不支持Apple Pay，请选择其他支付方式');
+      return { success: false, error: '设备不支持Apple Pay' };
+    }
+    
+    // 获取订单金额
+    const orderTotal = getOrderTotal();
+    console.log(`订单总金额: ${orderTotal}`);
+    
+    // 创建Apple Pay会话请求
+    const paymentRequest = {
+      countryCode: 'CN',
+      currencyCode: 'CNY',
+      supportedNetworks: ['visa', 'masterCard', 'amex', 'discover'],
+      merchantCapabilities: ['supports3DS'],
+      total: {
+        label: 'AI行程订单',
+        amount: orderTotal
+      }
+    };
+    
+    console.log('创建Apple Pay会话请求:', paymentRequest);
+    
+    // 创建Apple Pay会话
+    const session = new ApplePaySession(3, paymentRequest);
+    
+    // 配置会话事件处理
+    session.onvalidatemerchant = async (event) => {
+      try {
+        console.log('正在验证商户信息...');
+        // 这里应调用后端API获取商户会话
+        const merchantSession = await fetchMerchantValidation(event.validationURL);
+        session.completeMerchantValidation(merchantSession);
+      } catch (error) {
+        console.error('商户验证失败:', error);
+        session.abort();
+      }
+    };
+    
+    session.onpaymentauthorized = async (event) => {
+      try {
+        console.log('支付已授权，正在处理...');
+        // 向后端发送支付信息进行处理
+        const result = await processApplePayToken(event.payment.token);
+        
+        if (result.success) {
+          session.completePayment(ApplePaySession.STATUS_SUCCESS);
+          return { success: true, transactionId: result.transactionId };
+        } else {
+          session.completePayment(ApplePaySession.STATUS_FAILURE);
+          return { success: false, error: result.error };
+        }
+      } catch (error) {
+        console.error('处理Apple Pay支付时出错:', error);
+        session.completePayment(ApplePaySession.STATUS_FAILURE);
+        return { success: false, error: error.message };
+      }
+    };
+    
+    console.log('开始Apple Pay会话');
+    session.begin();
+    
+    // 返回处理中的状态
+    return { success: true, status: 'processing' };
+  } catch (error) {
+    console.error('Apple Pay支付流程出错:', error);
+    showError('Apple Pay支付处理失败: ' + error.message);
+    return { success: false, error: error.message };
+  }
 }
 
-// 导出函数
+/**
+ * 处理Google Pay支付
+ * @returns {Promise<Object>} 支付结果
+ */
+async function processGooglePayPayment() {
+  console.log('开始处理Google Pay支付请求');
+  
+  try {
+    // 检查Google Pay API是否可用
+    if (!window.google || !window.google.payments || !window.google.payments.api) {
+      console.error('Google Pay API不可用');
+      showError('当前环境不支持Google Pay，请选择其他支付方式');
+      return { success: false, error: 'Google Pay API不可用' };
+    }
+    
+    const paymentsClient = new google.payments.api.PaymentsClient({
+      environment: 'TEST' // 生产环境改为 'PRODUCTION'
+    });
+    
+    // 获取订单金额
+    const orderTotal = getOrderTotal();
+    console.log(`订单总金额: ${orderTotal}`);
+    
+    // 构建支付请求
+    const paymentDataRequest = {
+      apiVersion: 2,
+      apiVersionMinor: 0,
+      allowedPaymentMethods: [{
+        type: 'CARD',
+        parameters: {
+          allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+          allowedCardNetworks: ['VISA', 'MASTERCARD', 'AMEX', 'DISCOVER', 'JCB', 'UNIONPAY']
+        },
+        tokenizationSpecification: {
+          type: 'PAYMENT_GATEWAY',
+          parameters: {
+            'gateway': 'example',
+            'gatewayMerchantId': 'exampleGatewayMerchantId'
+          }
+        }
+      }],
+      merchantInfo: {
+        merchantId: '12345678901234567890',
+        merchantName: 'AI行程'
+      },
+      transactionInfo: {
+        totalPriceStatus: 'FINAL',
+        totalPrice: orderTotal.toString(),
+        currencyCode: 'CNY'
+      }
+    };
+    
+    console.log('创建Google Pay支付请求:', paymentDataRequest);
+    
+    // 加载Google Pay支付按钮
+    const googlePayButton = document.getElementById('google-pay-button');
+    if (!googlePayButton) {
+      console.error('未找到Google Pay按钮元素');
+      return { success: false, error: '无法初始化Google Pay按钮' };
+    }
+    
+    // 检查Google Pay是否可用
+    const isReadyToPayRequest = {
+      apiVersion: 2,
+      apiVersionMinor: 0,
+      allowedPaymentMethods: paymentDataRequest.allowedPaymentMethods
+    };
+    
+    const isReadyToPay = await paymentsClient.isReadyToPay(isReadyToPayRequest);
+    if (!isReadyToPay) {
+      console.error('Google Pay不可用');
+      showError('您的设备不支持Google Pay，请选择其他支付方式');
+      return { success: false, error: '设备不支持Google Pay' };
+    }
+    
+    // 处理支付
+    try {
+      console.log('请求Google Pay支付...');
+      const paymentData = await paymentsClient.loadPaymentData(paymentDataRequest);
+      
+      // 处理支付结果
+      console.log('已获取Google Pay支付数据:', paymentData);
+      
+      // 发送到服务器进行处理
+      const result = await processGooglePayToken(paymentData.paymentMethodData.tokenizationData.token);
+      
+      if (result.success) {
+        return { success: true, transactionId: result.transactionId };
+      } else {
+        showError(result.error || 'Google Pay支付失败');
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error('Google Pay支付请求失败:', error);
+      
+      if (error.statusCode === 'CANCELED') {
+        console.log('用户取消了Google Pay支付');
+        return { success: false, error: '支付已取消', canceled: true };
+      } else {
+        showError('Google Pay支付失败: ' + error.message);
+        return { success: false, error: error.message };
+      }
+    }
+  } catch (error) {
+    console.error('Google Pay支付流程出错:', error);
+    showError('Google Pay支付处理失败: ' + error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * 获取订单总金额
+ * @returns {number} 订单金额
+ */
+function getOrderTotal() {
+  console.log('正在获取订单总金额...');
+  
+  try {
+    const orderTotalElement = document.getElementById('order-total');
+    if (!orderTotalElement) {
+      console.error('未找到订单总金额元素');
+      return 0;
+    }
+    
+    // 从元素内容中提取价格（去除货币符号和格式）
+    const priceText = orderTotalElement.textContent.trim();
+    const priceMatch = priceText.match(/[\d.]+/);
+    
+    if (priceMatch) {
+      const price = parseFloat(priceMatch[0]);
+      console.log(`解析后的订单金额: ${price}`);
+      return price;
+    } else {
+      console.error(`无法从文本中提取价格: "${priceText}"`);
+      return 0;
+    }
+  } catch (error) {
+    console.error('获取订单金额时出错:', error);
+    return 0;
+  }
+}
+
+/**
+ * 获取当前选择的支付方式
+ * @returns {string} 当前支付方式
+ */
+function getCurrentPaymentMethod() {
+  console.log(`获取当前支付方式: ${currentPaymentMethod}`);
+  return currentPaymentMethod;
+}
+
+// 暴露公共API
 window.paymentMethods = {
-  getCurrentMethod: () => currentPaymentMethod,
-  showError,
-  showSuccess
-}; 
+  getCurrentMethod: getCurrentPaymentMethod,
+  showError: showError
+};
+
+console.log('payment-methods.js 完全加载'); 
