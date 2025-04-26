@@ -110,21 +110,22 @@ async function confirmPaymentIntent(params) {
       throw new Error('缺少支付方式');
     }
     
-    // 根据支付方式处理
-    switch (params.payment_method) {
-      case 'card':
-        return await confirmCardPayment(params);
-      case 'alipay':
-        return await confirmRedirectPayment(params, 'alipay');
-      case 'wechatpay':
-        return await confirmWeChatPayment(params);
-      case 'paypal':
-        return await confirmRedirectPayment(params, 'paypal');
-      case 'union_pay':
-        return await confirmRedirectPayment(params, 'union_pay');
-      default:
-        throw new Error(`不支持的支付方式: ${params.payment_method}`);
+    // 调用后端API确认支付
+    const apiUrl = '/api/confirm-payment-intent';
+    console.log('确认支付意图:', params);
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || '支付处理失败，请重试');
     }
+    
+    return await response.json();
   } catch (error) {
     console.error('确认支付意图失败:', error);
     return { error: error.message || '支付处理失败' };
@@ -143,17 +144,25 @@ async function confirmCardPayment(params) {
   }
   
   try {
-    // 使用Airwallex SDK确认支付
-    // 实际集成中应调用真实的Airwallex API
     console.log('确认卡支付:', params);
     
-    // 模拟支付结果
-    return {
-      id: params.intent_id,
-      status: 'SUCCEEDED',
-      amount: params.amount || 0.1,
-      currency: params.currency || 'CNY'
-    };
+    // 调用后端API确认支付
+    const response = await fetch('/api/confirm-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        intent_id: params.intent_id,
+        payment_method: 'card',
+        payment_method_data: params.card_details
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || '信用卡支付处理失败，请重试');
+    }
+    
+    return await response.json();
   } catch (error) {
     console.error('卡支付失败:', error);
     throw error;
@@ -168,27 +177,31 @@ async function confirmCardPayment(params) {
  */
 async function confirmRedirectPayment(params, method) {
   try {
-    // 使用Airwallex SDK确认支付
-    // 实际集成中应调用真实的Airwallex API
     console.log(`确认${method}支付:`, params);
     
-    // 模拟重定向支付响应
-    const returnUrl = params.payment_method_options?.[method]?.return_url || `${window.location.origin}/payment-return.html`;
+    // 获取当前域名作为返回地址
+    const returnUrl = params.payment_method_options?.[method]?.return_url || 
+                      `${window.location.origin}/payment-return.html`;
     
-    // 创建带有查询参数的重定向URL
-    const redirectUrl = new URL('https://example.com/pay');
-    redirectUrl.searchParams.append('method', method);
-    redirectUrl.searchParams.append('intent_id', params.intent_id);
-    redirectUrl.searchParams.append('return_url', returnUrl);
+    // 调用后端API
+    const response = await fetch('/api/confirm-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        intent_id: params.intent_id,
+        payment_method: method,
+        payment_method_data: {
+          return_url: returnUrl
+        }
+      })
+    });
     
-    return {
-      id: params.intent_id,
-      status: 'REQUIRES_ACTION',
-      next_action: {
-        type: 'redirect',
-        url: redirectUrl.toString()
-      }
-    };
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `${method}支付处理失败，请重试`);
+    }
+    
+    return await response.json();
   } catch (error) {
     console.error(`${method}支付失败:`, error);
     throw error;
@@ -202,19 +215,28 @@ async function confirmRedirectPayment(params, method) {
  */
 async function confirmWeChatPayment(params) {
   try {
-    // 使用Airwallex SDK确认支付
-    // 实际集成中应调用真实的Airwallex API
     console.log('确认微信支付:', params);
     
-    // 模拟微信支付响应
-    return {
-      id: params.intent_id,
-      status: 'REQUIRES_ACTION',
-      next_action: {
-        type: 'qrcode',
-        qrcode_data: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=weixin://wxpay/bizpayurl?pr=example'
-      }
-    };
+    // 调用后端API
+    const response = await fetch('/api/confirm-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        intent_id: params.intent_id,
+        payment_method: 'wechat',
+        payment_method_data: {
+          return_url: params.payment_method_options?.wechat?.return_url || 
+                      `${window.location.origin}/payment-return.html`
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || '微信支付处理失败，请重试');
+    }
+    
+    return await response.json();
   } catch (error) {
     console.error('微信支付失败:', error);
     throw error;
@@ -228,18 +250,25 @@ async function confirmWeChatPayment(params) {
  */
 async function checkPaymentStatus(intentId) {
   try {
-    // 实际环境中，这个请求应该发送到您的后端服务器
-    // 后端服务器将使用您的Airwallex API密钥查询支付状态
+    if (!intentId) {
+      throw new Error('缺少支付意图ID');
+    }
+    
+    // 调用后端API查询支付状态
+    const apiUrl = `/api/payment-intent/${intentId}`;
     console.log('检查支付状态:', intentId);
     
-    // 模拟支付状态
-    const statuses = ['PROCESSING', 'SUCCEEDED', 'FAILED'];
-    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
     
-    return {
-      id: intentId,
-      status: randomStatus
-    };
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || '查询支付状态失败');
+    }
+    
+    return await response.json();
   } catch (error) {
     console.error('检查支付状态失败:', error);
     throw new Error('检查支付状态失败');

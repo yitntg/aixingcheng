@@ -25,7 +25,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '.'))); // 提供静态文件
 
 // 导入Airwallex支付处理逻辑
-const { getApiToken, createPaymentIntent, getPaymentIntent } = require('./server/payment-logic');
+const { getApiToken, createPaymentIntent, getPaymentIntent, confirmPaymentIntent } = require('./server/payment-logic');
 
 // 临时路由，仅用于测试环境变量（验证后应移除）
 app.get('/api/test-env', (req, res) => {
@@ -47,6 +47,49 @@ app.post('/api/create-payment-intent', async (req, res) => {
     res.status(500).json({ 
       error: '创建支付意图失败', 
       message: error.message 
+    });
+  }
+});
+
+// API路由 - 确认支付意图
+app.post('/api/confirm-payment-intent', async (req, res) => {
+  try {
+    const paymentParams = req.body;
+    
+    // 验证必要参数
+    if (!paymentParams.intent_id) {
+      throw new Error('缺少支付意图ID');
+    }
+    
+    if (!paymentParams.payment_method) {
+      throw new Error('缺少支付方式');
+    }
+    
+    // 转发请求到Airwallex API
+    const token = await getApiToken(AIRWALLEX_API);
+    
+    // 准备请求URL和数据
+    const apiUrl = `${AIRWALLEX_API.API_BASE}/api/v1/pa/payment_intents/${paymentParams.intent_id}/confirm`;
+    
+    // 发送请求
+    const axios = require('axios');
+    const response = await axios({
+      method: 'post',
+      url: apiUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      data: paymentParams
+    });
+    
+    console.log('支付确认响应:', response.data);
+    res.json(response.data);
+  } catch (error) {
+    console.error('API错误 - 确认支付意图:', error.response?.data || error.message);
+    res.status(500).json({ 
+      error: '确认支付失败', 
+      message: error.response?.data?.message || error.message 
     });
   }
 });

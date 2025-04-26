@@ -191,6 +191,48 @@ app.get('/api/payment-intent/:id', async (req, res) => {
   }
 });
 
+// API路由 - 确认支付意图
+app.post('/api/confirm-payment-intent', async (req, res) => {
+  try {
+    const paymentParams = req.body;
+    
+    // 验证必要参数
+    if (!paymentParams.intent_id) {
+      throw new Error('缺少支付意图ID');
+    }
+    
+    if (!paymentParams.payment_method) {
+      throw new Error('缺少支付方式');
+    }
+    
+    // 转发请求到Airwallex API
+    const token = await getApiToken();
+    
+    // 准备请求URL和数据
+    const apiUrl = `${AIRWALLEX_API.API_BASE}/api/v1/pa/payment_intents/${paymentParams.intent_id}/confirm`;
+    
+    // 发送请求
+    const response = await axios({
+      method: 'post',
+      url: apiUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      data: paymentParams
+    });
+    
+    console.log('支付确认响应:', response.data);
+    res.json(response.data);
+  } catch (error) {
+    console.error('API错误 - 确认支付意图:', error.response?.data || error.message);
+    res.status(500).json({ 
+      error: '确认支付失败', 
+      message: error.response?.data?.message || error.message 
+    });
+  }
+});
+
 // 通用路由 - 将所有其他请求重定向到前端应用
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../index.html'));
