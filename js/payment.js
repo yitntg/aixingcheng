@@ -1,561 +1,363 @@
 /**
- * 支付模块 - 处理AI行程规划会员订阅支付
- * 
- * 此模块处理信用卡、支付宝和微信支付方式，包括支付方法切换和表单验证
+ * AI行程订阅支付系统
+ * 使用Airwallex支付API集成
  */
-
-// 导入支付相关集成
-import { initAirwallex, createPaymentIntent, confirmPayment } from './airwallex-integration.js';
 
 // 全局变量
-let currentPaymentMethod = 'card'; // 默认支付方式为信用卡
-let paymentIntent = null; // 存储支付意向ID
+let selectedPlan = null;
+let selectedAmount = 0;
+let selectedCurrency = 'CNY';
+let paymentIntent = null;
+let clientSecret = null;
+
+// 等待DOM加载完成
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('支付系统初始化中...');
+  
+  // 绑定提交按钮事件
+  const submitButton = document.getElementById('submit-button');
+  if (submitButton) {
+    submitButton.addEventListener('click', handleSubmit);
+  }
+  
+  // 绑定支付按钮事件
+  const paymentButton = document.getElementById('payment-button');
+  if (paymentButton) {
+    paymentButton.addEventListener('click', handlePayment);
+  }
+});
 
 /**
- * 初始化支付模块
+ * 选择套餐计划
+ * @param {string} plan - 选择的计划类型
+ * @param {number} amount - 计划金额
+ * @param {string} currency - 货币类型
  */
-async function initPaymentModule() {
+function selectPlan(plan, amount, currency) {
+  console.log(`选择了${plan}计划，金额：${amount} ${currency}`);
+  
+  // 更新全局变量
+  selectedPlan = plan;
+  selectedAmount = amount;
+  selectedCurrency = currency;
+  
+  // 更新UI显示
+  const planNameElement = document.getElementById('selected-plan-name');
+  const planPriceElement = document.getElementById('selected-plan-price');
+  const submitButton = document.getElementById('submit-button');
+  
+  // 根据计划类型更新显示名称
+  let planDisplayName = '';
+  switch (plan) {
+    case 'monthly':
+      planDisplayName = '月度订阅';
+      break;
+    case 'yearly':
+      planDisplayName = '年度订阅';
+      break;
+    case 'premium':
+      planDisplayName = '高级订阅';
+      break;
+    default:
+      planDisplayName = '未知计划';
+  }
+  
+  if (planNameElement) {
+    planNameElement.textContent = planDisplayName;
+  }
+  
+  if (planPriceElement) {
+    planPriceElement.textContent = `¥${amount}.00 ${plan === 'monthly' ? '/月' : '/年'}`;
+  }
+  
+  if (submitButton) {
+    submitButton.disabled = false;
+  }
+  
+  // 滚动到订阅表单
+  document.getElementById('subscribe').scrollIntoView({ behavior: 'smooth' });
+}
+
+/**
+ * 处理表单提交
+ * @param {Event} event - 事件对象
+ */
+async function handleSubmit(event) {
+  event.preventDefault();
+  
+  // 获取表单元素
+  const firstName = document.getElementById('firstName').value;
+  const lastName = document.getElementById('lastName').value;
+  const email = document.getElementById('email').value;
+  const phone = document.getElementById('phone').value;
+  
+  // 验证表单
+  if (!firstName || !lastName || !email || !phone) {
+    showMessage('请填写所有必填字段', 'danger');
+    return;
+  }
+  
+  if (!selectedPlan || selectedAmount <= 0) {
+    showMessage('请选择订阅计划', 'danger');
+    return;
+  }
+  
+  // 显示加载状态
+  const submitButton = document.getElementById('submit-button');
+  submitButton.disabled = true;
+  submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 处理中...';
+  
   try {
-    console.log('正在初始化支付模块...');
+    // 创建支付意图
+    const paymentIntentData = {
+      amount: selectedAmount,
+      currency: selectedCurrency,
+      merchantOrderId: `order_${Date.now()}`,
+      customerInfo: {
+        firstName,
+        lastName, 
+        email,
+        phone
+      },
+      returnUrl: window.location.origin + '/payment-success.html'
+    };
+    
+    const paymentIntentResponse = await createPaymentIntent(paymentIntentData);
+    paymentIntent = paymentIntentResponse;
+    clientSecret = paymentIntentResponse.client_secret;
+    
+    // 显示支付表单
+    document.getElementById('subscription-form').style.display = 'none';
+    document.getElementById('payment-container').style.display = 'block';
+    
+    // 初始化支付组件
+    await initializePaymentElement(clientSecret);
+    
+  } catch (error) {
+    console.error('创建支付意图失败:', error);
+    showMessage('处理订阅请求时发生错误，请稍后再试', 'danger');
+    
+    // 重置按钮状态
+    submitButton.disabled = false;
+    submitButton.innerHTML = '继续付款';
+  }
+}
+
+/**
+ * 创建支付意图
+ * @param {Object} paymentData - 支付数据
+ * @returns {Promise<Object>} - 支付意图对象
+ */
+async function createPaymentIntent(paymentData) {
+  try {
+    const response = await fetch('/functions/api/create-payment-intent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(paymentData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || '创建支付意图失败');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('支付意图API调用失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 获取Airwallex API令牌
+ * @returns {Promise<Object>} - API令牌对象
+ */
+async function getApiToken() {
+  try {
+    const response = await fetch('/functions/api/get-api-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || '获取API令牌失败');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('获取API令牌失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 初始化支付元素
+ * @param {string} clientSecret - 客户端密钥
+ */
+async function initializePaymentElement(clientSecret) {
+  try {
+    // 加载Airwallex JS SDK
+    await loadAirwallexScript();
+    
+    // 获取API令牌
+    const tokenData = await getApiToken();
+    const token = tokenData.token;
     
     // 初始化Airwallex
-    await initAirwallex();
-    console.log('Airwallex SDK初始化成功');
-    
-    // 创建支付意向
-    paymentIntent = await createPaymentIntent({
-      amount: 199.00, // 真实订阅价格
-      currency: 'CNY',
-      description: 'AI行程规划会员月度订阅'
+    window.Airwallex.init({
+      env: 'demo', // 根据环境设置: 'demo' 或 'prod'
+      origin: window.location.origin,
     });
-    console.log('支付意向创建成功:', paymentIntent);
     
-    // 将支付意向暴露为全局变量，供其他模块使用
-    window.paymentIntent = paymentIntent;
+    // 创建支付元素
+    const elementOptions = {
+      intent_id: paymentIntent.id,
+      client_secret: clientSecret,
+      currency: selectedCurrency,
+      mode: 'payment'
+    };
     
-    // 将confirmPayment方法暴露为全局方法，供payment-methods.js使用
-    window.confirmPayment = confirmPayment;
+    // 清除之前的元素
+    const paymentElement = document.getElementById('payment-element');
+    paymentElement.innerHTML = '';
     
-    // 注释掉payment.js中的bindPaymentMethodSwitching调用
-    // 我们将使用payment-methods.js中的setupPaymentMethodSwitcher
-    // bindPaymentMethodSwitching();
-    console.log('使用payment-methods.js中的支付方式切换功能');
+    // 创建新的元素
+    const element = window.Airwallex.createElement('payment', elementOptions);
     
-    // 绑定支付表单提交事件
-    bindPaymentFormSubmission();
+    // 挂载元素
+    element.mount('payment-element');
     
-    // 绑定信用卡输入格式化
-    bindCardInputFormatting();
+    // 添加事件监听
+    element.on('onSuccess', handlePaymentSuccess);
+    element.on('onError', handlePaymentError);
+    element.on('onCancel', handlePaymentCancel);
     
-    console.log('支付模块初始化完成');
+    // 保存元素引用
+    window.paymentElement = element;
+    
+    showMessage('支付表单已准备就绪', 'info');
   } catch (error) {
-    console.error('初始化支付模块失败:', error);
-    showError('支付系统加载失败，请刷新页面重试或联系客服');
+    console.error('初始化支付元素失败:', error);
+    showMessage('支付系统加载失败，请刷新页面重试', 'danger');
   }
 }
 
 /**
- * 绑定支付方式切换事件
- * 此函数已被禁用，使用payment-methods.js中的setupPaymentMethodSwitcher代替
+ * 加载Airwallex JS SDK
+ * @returns {Promise<void>}
  */
-function bindPaymentMethodSwitching() {
-  console.log('payment.js中的bindPaymentMethodSwitching被调用');
-  const paymentMethods = document.querySelectorAll('.payment-method');
-  
-  paymentMethods.forEach(method => {
-    method.addEventListener('click', () => {
-      // 移除其他支付方式的活跃状态
-      paymentMethods.forEach(m => m.classList.remove('active'));
-      
-      // 添加当前支付方式的活跃状态
-      method.classList.add('active');
-      
-      // 更新当前支付方式
-      currentPaymentMethod = method.getAttribute('data-method');
-      
-      // 显示相应的支付表单
-      showPaymentMethod(currentPaymentMethod);
-      
-      console.log(`payment.js: 切换到${currentPaymentMethod}支付方式`);
-    });
+function loadAirwallexScript() {
+  return new Promise((resolve, reject) => {
+    if (window.Airwallex) {
+      resolve();
+      return;
+    }
+    
+    const script = document.createElement('script');
+    script.src = 'https://checkout.airwallex.com/assets/elements.bundle.min.js';
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('无法加载Airwallex SDK'));
+    
+    document.head.appendChild(script);
   });
 }
 
 /**
- * 显示选定的支付方式表单
- * @param {string} method - 支付方式: 'card', 'alipay', 'wechat'
+ * 处理支付提交
+ * @param {Event} event - 事件对象
  */
-function showPaymentMethod(method) {
-  console.log(`payment.js中的showPaymentMethod被调用，方式:${method}`);
-  // 隐藏所有支付表单
-  document.querySelectorAll('.payment-method-form').forEach(form => {
-    form.classList.add('hidden');
-  });
+async function handlePayment(event) {
+  event.preventDefault();
   
-  // 显示选定的支付表单
-  const formId = `${method}-form`;
-  const form = document.getElementById(formId);
-  if (form) {
-    console.log(`找到并显示表单: ${formId}`);
-    form.classList.remove('hidden');
-  } else {
-    console.error(`未找到支付表单: ${formId}`);
-  }
-}
-
-/**
- * 绑定支付表单提交事件
- */
-function bindPaymentFormSubmission() {
-  const paymentForm = document.getElementById('payment-form');
   const paymentButton = document.getElementById('payment-button');
+  paymentButton.disabled = true;
+  paymentButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 处理支付...';
   
-  paymentForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    
-    try {
-      // 禁用支付按钮防止重复点击
-      paymentButton.disabled = true;
-      paymentButton.textContent = '处理中...';
-      
-      // 隐藏之前的错误信息
-      hideError();
-      
-      // 根据当前支付方式处理支付
-      switch (currentPaymentMethod) {
-        case 'card':
-          await handleCardPayment();
-          break;
-        case 'alipay':
-          await handleAlipayPayment();
-          break;
-        case 'wechat':
-          await handleWechatPayment();
-          break;
-        case 'googlepay':
-          await handleGooglePayPayment();
-          break;
-        case 'paypal':
-          await handlePayPalPayment();
-          break;
-        case 'applepay':
-          await handleApplePayPayment();
-          break;
-        case 'unionpay':
-          await handleUnionPayPayment();
-          break;
-        default:
-          throw new Error('不支持的支付方式');
-      }
-    } catch (error) {
-      console.error('支付处理失败:', error);
-      showError(error.message || '支付处理失败，请重试');
-      
-      // 恢复支付按钮状态
-      paymentButton.disabled = false;
-      paymentButton.textContent = '确认支付 ¥0.10';
-    }
-  });
-}
-
-/**
- * 处理信用卡支付
- */
-async function handleCardPayment() {
-  // 验证信用卡表单
-  const validationResult = validateCardForm();
-  if (!validationResult.valid) {
-    throw new Error(validationResult.message);
-  }
-  
-  // 获取信用卡信息
-  const cardHolderName = document.getElementById('card-holder').value.trim();
-  const cardNumber = document.getElementById('card-number').value.replace(/\s/g, '');
-  const cardExpiry = document.getElementById('card-expiry').value.trim().split('/');
-  const cardCvc = document.getElementById('card-cvc').value.trim();
-  
-  // 构建支付参数
-  const paymentParams = {
-    intent_id: paymentIntent.id,
-    payment_method: 'card',
-    payment_method_options: {
-      card: {
-        card_number: cardNumber,
-        expiry_month: cardExpiry[0],
-        expiry_year: cardExpiry[1],
-        cvc: cardCvc,
-        name: cardHolderName
-      }
-    }
-  };
-  
-  // 确认支付
-  const result = await confirmPayment(paymentParams);
-  
-  if (result.success) {
-    showPaymentSuccess('信用卡支付成功！');
-  } else {
-    throw new Error(result.error || '信用卡支付失败，请检查卡信息或联系银行');
-  }
-}
-
-/**
- * 处理支付宝支付
- */
-async function handleAlipayPayment() {
-  // 构建支付参数
-  const paymentParams = {
-    intent_id: paymentIntent.id,
-    payment_method: 'alipay',
-    payment_method_options: {
-      alipay: {
-        return_url: window.location.origin + '/payment-return'
-      }
-    }
-  };
-  
-  // 确认支付
-  const result = await confirmPayment(paymentParams);
-  
-  if (result.success && result.redirect_url) {
-    // 跳转到支付宝付款页面
-    window.location.href = result.redirect_url;
-  } else {
-    throw new Error(result.error || '支付宝支付初始化失败，请重试');
-  }
-}
-
-/**
- * 处理微信支付
- */
-async function handleWechatPayment() {
-  // 实现微信支付逻辑...
-  console.log('处理微信支付...');
-  
-  // 示例实现，在实际应用中应通过后端API获取支付二维码
-  showError('微信支付功能正在开发中...');
-  throw new Error('微信支付功能暂未实现');
-}
-
-/**
- * 处理Google Pay支付
- */
-async function handleGooglePayPayment() {
-  // 构建支付参数
-  const paymentParams = {
-    intent_id: paymentIntent.id,
-    payment_method: 'googlepay',
-    payment_method_options: {
-      googlepay: {
-        return_url: window.location.origin + '/payment-return'
-      }
-    }
-  };
-  
-  // 确认支付
   try {
-    console.log('处理Google Pay支付...');
-    const result = await confirmPayment(paymentParams);
+    if (!window.paymentElement) {
+      throw new Error('支付元素未初始化');
+    }
     
-    if (result.success && result.redirect_url) {
-      // 跳转到Google Pay付款页面
-      window.location.href = result.redirect_url;
-    } else {
-      throw new Error(result.error || 'Google Pay支付初始化失败，请重试');
-    }
+    // 提交支付
+    await window.paymentElement.submit();
   } catch (error) {
-    console.error('Google Pay支付失败:', error);
-    // 显示演示提示
-    showError('Google Pay支付功能正在开发中...');
-    throw new Error('Google Pay支付功能暂未完全实现');
-  }
-}
-
-/**
- * 处理PayPal支付
- */
-async function handlePayPalPayment() {
-  // 构建支付参数
-  const paymentParams = {
-    intent_id: paymentIntent.id,
-    payment_method: 'paypal',
-    payment_method_options: {
-      paypal: {
-        return_url: window.location.origin + '/payment-return'
-      }
-    }
-  };
-  
-  // 确认支付
-  try {
-    console.log('处理PayPal支付...');
-    const result = await confirmPayment(paymentParams);
+    console.error('支付提交失败:', error);
+    showMessage('支付处理失败，请稍后再试', 'danger');
     
-    if (result.success && result.redirect_url) {
-      // 跳转到PayPal付款页面
-      window.location.href = result.redirect_url;
-    } else {
-      throw new Error(result.error || 'PayPal支付初始化失败，请重试');
-    }
-  } catch (error) {
-    console.error('PayPal支付失败:', error);
-    // 显示演示提示
-    showError('PayPal支付功能正在开发中...');
-    throw new Error('PayPal支付功能暂未完全实现');
+    // 重置按钮状态
+    paymentButton.disabled = false;
+    paymentButton.innerHTML = '完成付款';
   }
 }
 
 /**
- * 处理Apple Pay支付
+ * 处理支付成功
+ * @param {Event} event - 事件对象
  */
-async function handleApplePayPayment() {
-  // 构建支付参数
-  const paymentParams = {
-    intent_id: paymentIntent.id,
-    payment_method: 'applepay',
-    payment_method_options: {
-      applepay: {
-        return_url: window.location.origin + '/payment-return'
-      }
-    }
-  };
+function handlePaymentSuccess(event) {
+  console.log('支付成功:', event);
   
-  // 确认支付
-  try {
-    console.log('处理Apple Pay支付...');
-    const result = await confirmPayment(paymentParams);
-    
-    if (result.success && result.redirect_url) {
-      // 跳转到Apple Pay付款页面
-      window.location.href = result.redirect_url;
-    } else {
-      throw new Error(result.error || 'Apple Pay支付初始化失败，请重试');
-    }
-  } catch (error) {
-    console.error('Apple Pay支付失败:', error);
-    // 显示演示提示
-    showError('Apple Pay支付功能正在开发中...');
-    throw new Error('Apple Pay支付功能暂未完全实现');
-  }
+  // 重定向到成功页面
+  window.location.href = '/payment-success.html?id=' + encodeURIComponent(paymentIntent.id);
 }
 
 /**
- * 处理银联支付
+ * 处理支付错误
+ * @param {Event} event - 事件对象
  */
-async function handleUnionPayPayment() {
-  // 构建支付参数
-  const paymentParams = {
-    intent_id: paymentIntent.id,
-    payment_method: 'unionpay',
-    payment_method_options: {
-      unionpay: {
-        return_url: window.location.origin + '/payment-return'
-      }
-    }
-  };
+function handlePaymentError(event) {
+  console.error('支付错误:', event);
   
-  // 确认支付
-  try {
-    console.log('处理银联支付...');
-    const result = await confirmPayment(paymentParams);
-    
-    if (result.success && result.redirect_url) {
-      // 跳转到银联付款页面
-      window.location.href = result.redirect_url;
-    } else {
-      throw new Error(result.error || '银联支付初始化失败，请重试');
-    }
-  } catch (error) {
-    console.error('银联支付失败:', error);
-    // 显示演示提示
-    showError('银联支付功能正在开发中...');
-    throw new Error('银联支付功能暂未完全实现');
-  }
+  const errorMessage = event.error && event.error.message 
+    ? event.error.message 
+    : '支付处理失败，请稍后再试';
+  
+  showMessage(errorMessage, 'danger');
+  
+  // 重置按钮状态
+  const paymentButton = document.getElementById('payment-button');
+  paymentButton.disabled = false;
+  paymentButton.innerHTML = '重新尝试付款';
 }
 
 /**
- * 验证信用卡表单
- * @returns {Object} 验证结果对象 {valid: boolean, message: string}
+ * 处理支付取消
  */
-function validateCardForm() {
-  const cardHolder = document.getElementById('card-holder').value.trim();
-  const cardNumber = document.getElementById('card-number').value.trim().replace(/\s/g, '');
-  const cardExpiry = document.getElementById('card-expiry').value.trim();
-  const cardCvc = document.getElementById('card-cvc').value.trim();
+function handlePaymentCancel() {
+  console.log('支付已取消');
+  showMessage('您已取消支付', 'warning');
   
-  if (!cardHolder) {
-    return { valid: false, message: '请输入持卡人姓名' };
-  }
-  
-  if (!cardNumber || cardNumber.length < 15 || cardNumber.length > 19 || !/^\d+$/.test(cardNumber)) {
-    return { valid: false, message: '请输入有效的卡号' };
-  }
-  
-  if (!cardExpiry || !/^\d{2}\/\d{2}$/.test(cardExpiry)) {
-    return { valid: false, message: '请输入有效的到期日期 (MM/YY)' };
-  }
-  
-  const [month, year] = cardExpiry.split('/');
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear() % 100;
-  const currentMonth = currentDate.getMonth() + 1;
-  
-  if (parseInt(month) < 1 || parseInt(month) > 12) {
-    return { valid: false, message: '月份必须介于1-12之间' };
-  }
-  
-  if (parseInt(year) < currentYear || (parseInt(year) === currentYear && parseInt(month) < currentMonth)) {
-    return { valid: false, message: '卡片已过期' };
-  }
-  
-  if (!cardCvc || !/^\d{3,4}$/.test(cardCvc)) {
-    return { valid: false, message: '请输入有效的安全码 (CVC)' };
-  }
-  
-  return { valid: true, message: '' };
+  // 重置按钮状态
+  const paymentButton = document.getElementById('payment-button');
+  paymentButton.disabled = false;
+  paymentButton.innerHTML = '完成付款';
 }
 
 /**
- * 显示支付成功信息
- * @param {string} message - 成功消息
+ * 显示消息
+ * @param {string} message - 消息文本
+ * @param {string} type - 消息类型 (success, info, warning, danger)
  */
-function showPaymentSuccess(message) {
-  // 清除支付表单
-  const paymentForm = document.getElementById('payment-form');
-  paymentForm.innerHTML = '';
+function showMessage(message, type = 'info') {
+  const messageElement = document.getElementById('payment-message');
+  if (!messageElement) return;
   
-  // 创建成功消息容器
-  const successContainer = document.createElement('div');
-  successContainer.className = 'payment-success';
-  successContainer.style.textAlign = 'center';
-  successContainer.style.padding = '40px 20px';
+  // 清除之前的所有类
+  messageElement.className = '';
   
-  // 添加成功图标
-  const successIcon = document.createElement('div');
-  successIcon.innerHTML = '<i class="fas fa-check-circle" style="font-size: 64px; color: var(--success-color);"></i>';
-  successContainer.appendChild(successIcon);
+  // 添加新类
+  messageElement.classList.add('alert', `alert-${type}`, 'mt-3', 'animate-fade-in');
   
-  // 添加成功消息
-  const successMessage = document.createElement('h3');
-  successMessage.textContent = message;
-  successMessage.style.margin = '20px 0';
-  successMessage.style.fontSize = '24px';
-  successContainer.appendChild(successMessage);
+  // 设置消息
+  messageElement.textContent = message;
   
-  // 添加后续提示
-  const successInfo = document.createElement('p');
-  successInfo.textContent = '您的会员订阅已激活，将在3秒后跳转到会员中心...';
-  successInfo.style.color = 'var(--dark-gray)';
-  successContainer.appendChild(successInfo);
-  
-  // 将成功消息添加到表单容器
-  paymentForm.appendChild(successContainer);
-  
-  // 设置延迟后跳转到会员中心
-  setTimeout(() => {
-    window.location.href = '/member-center';
-  }, 3000);
-}
-
-/**
- * 显示错误信息
- * @param {string} message - 错误消息
- */
-function showError(message) {
-  const errorElement = document.getElementById('error-message');
-  errorElement.textContent = message;
-  errorElement.style.display = 'block';
-  errorElement.style.backgroundColor = 'rgba(231, 76, 60, 0.1)';
-  errorElement.style.color = 'var(--danger-color)';
-  errorElement.style.border = '1px solid var(--danger-color)';
-}
-
-/**
- * 隐藏错误信息
- */
-function hideError() {
-  const errorElement = document.getElementById('error-message');
-  errorElement.style.display = 'none';
-  errorElement.textContent = '';
-}
-
-/**
- * 绑定信用卡输入格式化
- */
-function bindCardInputFormatting() {
-  // 卡号格式化为 xxxx xxxx xxxx xxxx
-  const cardNumberInput = document.getElementById('card-number');
-  if (cardNumberInput) {
-    cardNumberInput.addEventListener('input', function(e) {
-      let value = this.value.replace(/\D/g, '');
-      let formattedValue = '';
-      
-      for (let i = 0; i < value.length; i++) {
-        if (i > 0 && i % 4 === 0) {
-          formattedValue += ' ';
-        }
-        formattedValue += value[i];
-      }
-      
-      this.value = formattedValue;
-      
-      // 更新卡品牌图标（简化版本）
-      const cardBrandIcon = document.querySelector('.card-brand i');
-      if (value.length > 0) {
-        if (value.startsWith('4')) {
-          cardBrandIcon.className = 'fab fa-cc-visa';
-          cardBrandIcon.style.color = '#1A1F71';
-        } else if (value.startsWith('5')) {
-          cardBrandIcon.className = 'fab fa-cc-mastercard';
-          cardBrandIcon.style.color = '#EB001B';
-        } else if (value.startsWith('3')) {
-          cardBrandIcon.className = 'fab fa-cc-amex';
-          cardBrandIcon.style.color = '#2E77BC';
-        } else {
-          cardBrandIcon.className = 'far fa-credit-card';
-          cardBrandIcon.style.color = '#6B7280';
-        }
-      } else {
-        cardBrandIcon.className = 'far fa-credit-card';
-        cardBrandIcon.style.color = '#6B7280';
-      }
-    });
-  }
-  
-  // 有效期格式化为 MM/YY
-  const cardExpiryInput = document.getElementById('card-expiry');
-  if (cardExpiryInput) {
-    cardExpiryInput.addEventListener('input', function(e) {
-      let value = this.value.replace(/\D/g, '');
-      
-      if (value.length > 0) {
-        if (value.length <= 2) {
-          this.value = value;
-        } else {
-          // 格式化为MM/YY
-          this.value = value.substring(0, 2) + '/' + value.substring(2, 4);
-        }
-        
-        // 输入月份后自动添加斜杠
-        if (value.length === 2 && !this.value.includes('/')) {
-          this.value += '/';
-        }
-      }
-    });
-  }
-}
-
-// 页面加载完成后初始化支付模块
-document.addEventListener('DOMContentLoaded', initPaymentModule);
-
-// 导出模块函数以供其他模块使用
-export {
-  initPaymentModule,
-  handleCardPayment,
-  handleAlipayPayment,
-  handleWechatPayment,
-  handleGooglePayPayment,
-  handlePayPalPayment,
-  handleApplePayPayment,
-  handleUnionPayPayment
-}; 
+  // 添加动画
+  messageElement.style.animation = 'none';
+  messageElement.offsetHeight; // 触发重绘
+  messageElement.style.animation = 'fadeIn 0.5s ease-out forwards';
+} 

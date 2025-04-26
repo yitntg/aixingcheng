@@ -1,4 +1,4 @@
-// 获取Airwallex API令牌 - CloudFlare Pages Function
+// 创建支付意图API - CloudFlare Pages Function
 export async function onRequest(context) {
   // 设置CORS头
   const headers = {
@@ -41,6 +41,20 @@ export async function onRequest(context) {
       );
     }
 
+    // 解析请求体
+    const paymentData = await context.request.json();
+    
+    // 验证必要参数
+    if (!paymentData.amount || !paymentData.currency) {
+      return new Response(
+        JSON.stringify({
+          error: '参数错误',
+          message: '缺少必要参数：amount 或 currency'
+        }),
+        { status: 400, headers }
+      );
+    }
+
     // 获取API令牌
     const tokenResponse = await fetch(`${apiBase}/api/v1/authentication/login`, {
       method: 'POST',
@@ -57,27 +71,56 @@ export async function onRequest(context) {
     }
 
     const tokenData = await tokenResponse.json();
+    const token = tokenData.token;
+
+    // 准备请求数据
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    const merchantOrderId = paymentData.merchantOrderId || `order_${Date.now()}`;
     
-    // 添加过期时间信息（令牌有效期为2小时）
-    const expiresAt = Date.now() + 7200000; // 当前时间加2小时（毫秒）
+    const requestData = {
+      amount: paymentData.amount,
+      currency: paymentData.currency,
+      merchant_order_id: merchantOrderId,
+      request_id: requestId,
+      order: {
+        products: [{
+          name: 'AI行程高级会员',
+          desc: '月度订阅服务',
+          quantity: 1,
+          unit_price: paymentData.amount,
+          currency: paymentData.currency,
+        }]
+      },
+      return_url: `${paymentData.returnUrl || context.request.url.origin}/payment-success.html`
+    };
+
+    // 创建支付意图
+    const paymentResponse = await fetch(`${apiBase}/api/v1/pa/payment_intents/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(requestData)
+    });
+
+    if (!paymentResponse.ok) {
+      const paymentError = await paymentResponse.json();
+      throw new Error(`创建支付意图失败: ${paymentError.message || paymentResponse.statusText}`);
+    }
+
+    const paymentResult = await paymentResponse.json();
     
-    // 返回成功响应，包含令牌和过期时间
+    // 返回成功响应
     return new Response(
-      JSON.stringify({
-        token: tokenData.token,
-        expires_at: expiresAt,
-        message: '令牌获取成功'
-      }),
+      JSON.stringify(paymentResult),
       { headers }
     );
   } catch (error) {
-    // 捕获并处理所有错误
-    console.error('获取API令牌错误:', error);
-    
     // 返回错误响应
     return new Response(
       JSON.stringify({
-        error: '获取API令牌失败',
+        error: '创建支付意图失败',
         message: error.message
       }),
       { status: 500, headers }

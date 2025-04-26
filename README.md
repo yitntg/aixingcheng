@@ -1,55 +1,85 @@
-# AI行程支付系统
+# AI行程订阅支付系统
 
-## 环境变量配置
+这是一个基于Airwallex支付API的订阅支付系统，专为AI行程规划服务设计。系统使用CloudFlare Pages Functions作为后端，提供完整的支付流程和订阅管理功能。
 
-系统需要以下环境变量才能正常工作：
+## 主要功能
 
-### 必要环境变量
-- `AIRWALLEX_CLIENT_ID` - Airwallex API的客户端ID
-- `AIRWALLEX_API_KEY` - Airwallex API的密钥
+- 多种订阅计划展示（月度、年度、高级）
+- 集成Airwallex支付API进行支付处理
+- 响应式设计，适配各种设备
+- 支付成功和失败页面
+- 订单信息展示
 
-### 可选环境变量
-- `AIRWALLEX_API_BASE` - Airwallex API的基础URL，默认为 `https://api.airwallex.com`
+## 技术栈
 
-## CloudFlare Pages 部署说明
+- 前端：HTML, CSS, JavaScript
+- 样式：Bootstrap 5
+- 图标：Font Awesome
+- 支付处理：Airwallex JavaScript SDK
+- 后端API：CloudFlare Pages Functions
+- API集成：Airwallex Payment API
 
-由于CloudFlare Pages支付环境变量但无法直接在前端代码中访问，需要进行如下配置：
+## 项目结构
 
-1. 在CloudFlare Pages项目设置中添加环境变量：
-   - `AIRWALLEX_CLIENT_ID`
-   - `AIRWALLEX_API_KEY`
-   - `AIRWALLEX_API_BASE` (可选)
-
-2. 确保在"构建和部署"设置中，环境变量包含在"生产"和"预览"环境中
-
-3. 配置CloudFlare Pages的Functions功能，以便API请求能够访问环境变量
-
-## 本地开发说明
-
-1. 创建`.env`文件，添加必要的环境变量：
 ```
-AIRWALLEX_CLIENT_ID=your_client_id
-AIRWALLEX_API_KEY=your_api_key
-AIRWALLEX_API_BASE=https://api-demo.airwallex.com  # 开发环境使用演示API
-```
-
-2. 安装依赖：
-```
-npm install
+/
+├── index.html               # 主页面，包含产品展示和订阅表单
+├── payment-success.html     # 支付成功页面
+├── payment-failed.html      # 支付失败页面
+├── css/
+│   └── styles.css           # 主样式表
+├── js/
+│   └── payment.js           # 支付处理逻辑
+└── functions/
+    └── api/
+        ├── get-api-token.js # 获取Airwallex API令牌的CloudFlare Function
+        └── create-payment-intent.js # 创建支付意图的CloudFlare Function
 ```
 
-3. 启动开发服务器：
-```
-npm run dev
-```
+## 部署
 
-## 故障排除
+本项目设计为在CloudFlare Pages上部署，需要配置以下环境变量：
 
-如果支付按钮点击后无反应或支付失败，请检查：
+- `AIRWALLEX_CLIENT_ID`: Airwallex API的客户端ID
+- `AIRWALLEX_API_KEY`: Airwallex API的密钥
 
-1. 浏览器控制台是否有JavaScript错误
-2. 服务器日志中API请求是否成功
-3. 环境变量是否正确配置
-4. 网络请求是否被跨域策略(CORS)阻止
+## 本地开发
 
-通过API端点 `/api/test-env` 可以检查环境变量状态。
+1. 克隆仓库：
+   ```
+   git clone https://github.com/your-username/ai-travel-payment-system.git
+   cd ai-travel-payment-system
+   ```
+
+2. 使用本地HTTP服务器启动项目：
+   ```
+   # 使用Python 3自带的HTTP服务器
+   python -m http.server 8000
+   
+   # 或使用Node.js的http-server
+   npx http-server
+   ```
+
+3. 浏览器访问：`http://localhost:8000`
+
+## 注意事项
+
+- 支付功能需要Airwallex账户和相应的API凭证
+- 在生产环境中，请确保使用HTTPS协议
+- 当前实现使用的是Airwallex的测试环境，切换到生产环境需修改`payment.js`中的`env`参数
+
+## 常见问题
+
+**问题**: 支付按钮点击后没有反应
+**解决**: 检查浏览器控制台是否有JavaScript错误，确保API凭证配置正确
+
+**问题**: CloudFlare Functions报错
+**解决**: 检查环境变量是否正确配置，API密钥是否有效
+
+## 许可
+
+本项目采用MIT许可证 - 详情请参阅LICENSE文件
+
+## 联系方式
+
+如有任何问题或需要支持，请联系：support@aitravel.com 
