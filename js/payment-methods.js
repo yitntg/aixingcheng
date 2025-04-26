@@ -9,8 +9,11 @@ let currentPaymentMethod = 'card';
  * 初始化页面
  */
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('payment-methods.js: DOM加载完成，准备设置支付方式切换');
   setupPaymentMethodSwitcher();
   setupTestData();
+  setupApplePayButton();
+  setupGooglePayButton();
   // 支付按钮由airwallex-integration.js处理
   // setupPaymentButton();
 });
@@ -19,11 +22,19 @@ document.addEventListener('DOMContentLoaded', function() {
  * 设置支付方式切换
  */
 function setupPaymentMethodSwitcher() {
+  console.log('payment-methods.js: 设置支付方式切换');
   const paymentMethods = document.querySelectorAll('.payment-method');
   const paymentForms = document.querySelectorAll('.payment-method-form');
   
+  console.log(`找到${paymentMethods.length}个支付方式和${paymentForms.length}个支付表单`);
+  
   paymentMethods.forEach(method => {
+    const methodType = method.getAttribute('data-method');
+    console.log(`为支付方式 ${methodType} 绑定点击事件`);
+    
     method.addEventListener('click', function() {
+      console.log(`支付方式 ${methodType} 被点击`);
+      
       // 移除所有活跃状态
       paymentMethods.forEach(m => m.classList.remove('active'));
       paymentForms.forEach(f => f.classList.add('hidden'));
@@ -31,12 +42,17 @@ function setupPaymentMethodSwitcher() {
       // 设置当前选中的支付方式
       this.classList.add('active');
       currentPaymentMethod = this.getAttribute('data-method');
+      console.log(`payment-methods.js: 当前支付方式设置为 ${currentPaymentMethod}`);
       
       // 显示对应的表单
       const formId = `${currentPaymentMethod}-form`;
       const form = document.getElementById(formId);
+      
       if (form) {
+        console.log(`找到并显示表单: ${formId}`);
         form.classList.remove('hidden');
+      } else {
+        console.error(`未找到支付表单: ${formId}`);
       }
       
       // 更新按钮文本
