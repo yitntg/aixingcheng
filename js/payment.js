@@ -30,8 +30,16 @@ async function initPaymentModule() {
     });
     console.log('支付意向创建成功:', paymentIntent);
     
-    // 绑定支付方式切换事件
-    bindPaymentMethodSwitching();
+    // 将支付意向暴露为全局变量，供其他模块使用
+    window.paymentIntent = paymentIntent;
+    
+    // 将confirmPayment方法暴露为全局方法，供payment-methods.js使用
+    window.confirmPayment = confirmPayment;
+    
+    // 注释掉payment.js中的bindPaymentMethodSwitching调用
+    // 我们将使用payment-methods.js中的setupPaymentMethodSwitcher
+    // bindPaymentMethodSwitching();
+    console.log('使用payment-methods.js中的支付方式切换功能');
     
     // 绑定支付表单提交事件
     bindPaymentFormSubmission();
@@ -48,8 +56,10 @@ async function initPaymentModule() {
 
 /**
  * 绑定支付方式切换事件
+ * 此函数已被禁用，使用payment-methods.js中的setupPaymentMethodSwitcher代替
  */
 function bindPaymentMethodSwitching() {
+  console.log('payment.js中的bindPaymentMethodSwitching被调用');
   const paymentMethods = document.querySelectorAll('.payment-method');
   
   paymentMethods.forEach(method => {
@@ -66,7 +76,7 @@ function bindPaymentMethodSwitching() {
       // 显示相应的支付表单
       showPaymentMethod(currentPaymentMethod);
       
-      console.log(`切换到${currentPaymentMethod}支付方式`);
+      console.log(`payment.js: 切换到${currentPaymentMethod}支付方式`);
     });
   });
 }
@@ -76,6 +86,7 @@ function bindPaymentMethodSwitching() {
  * @param {string} method - 支付方式: 'card', 'alipay', 'wechat'
  */
 function showPaymentMethod(method) {
+  console.log(`payment.js中的showPaymentMethod被调用，方式:${method}`);
   // 隐藏所有支付表单
   document.querySelectorAll('.payment-method-form').forEach(form => {
     form.classList.add('hidden');
@@ -85,7 +96,10 @@ function showPaymentMethod(method) {
   const formId = `${method}-form`;
   const form = document.getElementById(formId);
   if (form) {
+    console.log(`找到并显示表单: ${formId}`);
     form.classList.remove('hidden');
+  } else {
+    console.error(`未找到支付表单: ${formId}`);
   }
 }
 
