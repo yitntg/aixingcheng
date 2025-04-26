@@ -74,6 +74,15 @@ function handleSpecialPaymentMethods(method) {
   // 重置按钮可见性和其他元素
   paymentButton.style.display = 'block';
   
+  // 隐藏所有特殊支付按钮
+  const specialButtons = ['apple-pay-button', 'google-pay-button', 'wechat-pay-button', 'alipay-button', 'paypal-button', 'unionpay-button'];
+  specialButtons.forEach(id => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.style.display = 'none';
+    }
+  });
+  
   // 根据支付方式执行特殊逻辑
   switch(method) {
     case 'applepay':
@@ -83,7 +92,9 @@ function handleSpecialPaymentMethods(method) {
         document.getElementById('apple-pay-button').style.display = 'flex';
       } else {
         console.log('设备不支持Apple Pay');
-        showError('您的设备可能不支持Apple Pay，请选择其他支付方式');
+        // 显示模拟的Apple Pay按钮，实际使用中应该隐藏
+        document.getElementById('apple-pay-button').style.display = 'flex';
+        showError('提示：此为演示环境。实际生产环境中，只有在支持Apple Pay的设备上才会显示此按钮。');
       }
       break;
       
@@ -95,14 +106,76 @@ function handleSpecialPaymentMethods(method) {
         document.getElementById('google-pay-button').style.display = 'flex';
       } else {
         console.log('设备不支持Google Pay');
-        showError('您的设备可能不支持Google Pay，请选择其他支付方式');
+        // 显示模拟的Google Pay按钮，实际使用中应该隐藏
+        document.getElementById('google-pay-button').style.display = 'flex';
+        showError('提示：此为演示环境。实际生产环境中，只有在支持Google Pay的设备上才会显示此按钮。');
       }
       break;
       
     case 'paypal':
       // PayPal在某些情况下可能使用其自带按钮
-      // 如果使用PayPal SDK的自定义按钮，可以考虑隐藏默认按钮
-      // paymentButton.style.display = 'none'; 
+      document.getElementById('paypal-button-container').innerHTML = '<div id="paypal-button" style="width: 100%; height: 50px; border-radius: 5px; background-color: #0070BA; display: flex; justify-content: center; align-items: center; color: white; margin-bottom: 20px; cursor: pointer;"><i class="fab fa-paypal" style="margin-right: 10px;"></i> PayPal 支付</div>';
+      
+      // 为PayPal按钮添加点击事件
+      const paypalButton = document.getElementById('paypal-button');
+      if (paypalButton) {
+        paypalButton.addEventListener('click', function() {
+          document.getElementById('payment-button').click();
+        });
+      }
+      break;
+      
+    case 'wechat':
+      // 添加微信支付二维码内容
+      const wechatForm = document.getElementById('wechat-form');
+      if (wechatForm && !document.getElementById('wechat-pay-button')) {
+        const wechatButton = document.createElement('div');
+        wechatButton.id = 'wechat-pay-button';
+        wechatButton.style = 'width: 100%; height: 50px; border-radius: 5px; background-color: #07C160; display: flex; justify-content: center; align-items: center; color: white; margin-bottom: 20px; cursor: pointer;';
+        wechatButton.innerHTML = '<i class="fab fa-weixin" style="margin-right: 10px;"></i> 微信支付';
+        wechatButton.addEventListener('click', function() {
+          document.getElementById('payment-button').click();
+        });
+        
+        // 添加模拟的二维码图像
+        const qrCode = document.createElement('div');
+        qrCode.style = 'width: 180px; height: 180px; background-color: #f5f5f5; margin: 0 auto; border: 1px solid #ddd; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; display: none;';
+        qrCode.innerHTML = '<i class="fas fa-qrcode" style="font-size: 100px; color: #666;"></i>';
+        qrCode.id = 'wechat-qrcode';
+        
+        wechatForm.querySelector('.form-group').appendChild(qrCode);
+        wechatForm.querySelector('.form-group').appendChild(wechatButton);
+      }
+      break;
+      
+    case 'alipay':
+      // 添加支付宝支付按钮
+      const alipayForm = document.getElementById('alipay-form');
+      if (alipayForm && !document.getElementById('alipay-button')) {
+        const alipayButton = document.createElement('div');
+        alipayButton.id = 'alipay-button';
+        alipayButton.style = 'width: 100%; height: 50px; border-radius: 5px; background-color: #1677FF; display: flex; justify-content: center; align-items: center; color: white; margin-bottom: 20px; cursor: pointer;';
+        alipayButton.innerHTML = '<i class="fab fa-alipay" style="margin-right: 10px;"></i> 支付宝支付';
+        alipayButton.addEventListener('click', function() {
+          document.getElementById('payment-button').click();
+        });
+        alipayForm.querySelector('.form-group').appendChild(alipayButton);
+      }
+      break;
+      
+    case 'unionpay':
+      // 添加银联支付按钮
+      const unionpayForm = document.getElementById('unionpay-form');
+      if (unionpayForm && !document.getElementById('unionpay-button')) {
+        const unionpayButton = document.createElement('div');
+        unionpayButton.id = 'unionpay-button';
+        unionpayButton.style = 'width: 100%; height: 50px; border-radius: 5px; background-color: #CF2D28; display: flex; justify-content: center; align-items: center; color: white; margin-bottom: 20px; cursor: pointer;';
+        unionpayButton.innerHTML = '<i class="fas fa-credit-card" style="margin-right: 10px;"></i> 银联支付';
+        unionpayButton.addEventListener('click', function() {
+          document.getElementById('payment-button').click();
+        });
+        unionpayForm.querySelector('.form-group').appendChild(unionpayButton);
+      }
       break;
   }
 }
