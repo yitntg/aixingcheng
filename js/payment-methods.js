@@ -1137,15 +1137,43 @@ async function processCardPayment() {
     // 分解有效期
     const [expMonth, expYear] = cardExpiry.split('/');
     
-    // 获取支付意图
+    // 获取支付意图 - 如果未设置，创建一个新的支付意图
     if (!window.paymentIntent || !window.paymentIntent.id) {
-      throw new Error('支付初始化失败，请刷新页面重试');
+      console.log('支付意图未初始化，创建新的支付意图...');
+      
+      // 显示状态信息
+      showSuccess('正在初始化支付，请稍候...');
+      
+      try {
+        // 创建支付意图
+        const response = await fetch('/api/create-payment-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: 199.00,
+            currency: 'CNY',
+            description: 'AI行程规划会员月度订阅'
+          })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || '创建支付意图失败，请重试');
+        }
+        
+        window.paymentIntent = await response.json();
+        console.log('支付意图创建成功:', window.paymentIntent.id);
+      } catch (error) {
+        console.error('创建支付意图失败:', error);
+        throw new Error('支付初始化失败，请刷新页面重试: ' + error.message);
+      }
     }
+    
+    console.log('使用支付意图:', window.paymentIntent.id);
     
     // 构建支付请求参数
     const paymentParams = {
       intent_id: window.paymentIntent.id,
-      client_secret: window.paymentIntent.client_secret,
       payment_method: 'card',
       payment_method_data: {
         card: {
@@ -1168,11 +1196,12 @@ async function processCardPayment() {
     });
     
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || '支付处理失败，请重试');
     }
     
     const result = await response.json();
+    console.log('支付结果:', result);
     
     // 处理支付结果
     if (result.status === 'SUCCEEDED') {
@@ -1183,7 +1212,7 @@ async function processCardPayment() {
       setTimeout(() => {
         window.location.href = `/payment-success.html?txn_id=${result.id}`;
       }, 2000);
-    } else if (result.status === 'REQUIRES_ACTION' && result.next_action) {
+    } else if (result.next_action) {
       // 需要额外操作
       handleNextAction(result);
     } else {
@@ -1364,10 +1393,39 @@ async function processAlipayPayment() {
     // 清除错误信息
     hideError();
     
-    // 获取支付意图
+    // 获取或创建支付意图
     if (!window.paymentIntent || !window.paymentIntent.id) {
-      throw new Error('支付初始化失败，请刷新页面重试');
+      console.log('支付意图未初始化，创建新的支付意图...');
+      
+      // 显示状态信息
+      showSuccess('正在初始化支付，请稍候...');
+      
+      try {
+        // 创建支付意图
+        const response = await fetch('/api/create-payment-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: 199.00,
+            currency: 'CNY',
+            description: 'AI行程规划会员月度订阅'
+          })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || '创建支付意图失败，请重试');
+        }
+        
+        window.paymentIntent = await response.json();
+        console.log('支付意图创建成功:', window.paymentIntent.id);
+      } catch (error) {
+        console.error('创建支付意图失败:', error);
+        throw new Error('支付初始化失败，请刷新页面重试: ' + error.message);
+      }
     }
+    
+    console.log('使用支付意图:', window.paymentIntent.id);
     
     // 构建支付请求参数
     const paymentParams = {
@@ -1388,17 +1446,25 @@ async function processAlipayPayment() {
     });
     
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || '支付处理失败，请重试');
     }
     
     const result = await response.json();
+    console.log('支付宝支付结果:', result);
     
     // 处理支付结果
     if (result.next_action && result.next_action.url) {
       // 需要重定向到支付宝
       showSuccess('正在跳转到支付宝...');
       window.location.href = result.next_action.url;
+    } else if (result.status === 'SUCCEEDED') {
+      // 支付成功
+      showSuccess('支付成功！正在跳转...');
+      
+      setTimeout(() => {
+        window.location.href = `/payment-success.html?txn_id=${result.id}`;
+      }, 2000);
     } else {
       throw new Error('无法获取支付宝付款链接');
     }

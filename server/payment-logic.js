@@ -25,14 +25,14 @@ async function getApiToken(config) {
 
   try {
     // 检查必要的API配置
-    if (!config.API_KEY || !config.CLIENT_ID) {
-      console.log('警告：缺少API密钥或客户端ID，切换到演示模式');
-      return _getDemoToken(now);
+    if (!config.CLIENT_ID || !config.API_KEY) {
+      throw new Error('缺少API凭证：CLIENT_ID或API_KEY未提供');
     }
 
     console.log('获取新的API令牌...');
     console.log('使用Client ID:', config.CLIENT_ID.substring(0, 4) + '****'); // 打印部分ID以便调试
     console.log('API基础URL:', config.API_BASE);
+    
     // 获取新令牌
     const response = await axios({
       method: 'post',
@@ -56,26 +56,8 @@ async function getApiToken(config) {
     }
   } catch (error) {
     console.error('Airwallex认证错误:', error.response?.data || error.message);
-    
-    // 演示环境：如果没有API密钥或认证失败，返回模拟令牌
-    return _getDemoToken(now);
+    throw new Error(`认证失败: ${error.response?.data?.message || error.message}`);
   }
-}
-
-/**
- * 获取演示模式的令牌
- * @private
- * @param {number} now 当前时间戳（秒）
- * @returns {string} 模拟令牌
- */
-function _getDemoToken(now) {
-  console.log('注意：使用模拟令牌（演示模式）');
-  const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkRlbW8gVG9rZW4iLCJpYXQiOjE1MTYyMzkwMjJ9';
-  API_TOKEN = {
-    token: mockToken,
-    expires_at: now + 3600
-  };
-  return mockToken;
 }
 
 /**
@@ -91,11 +73,9 @@ async function createPaymentIntent(paymentData, config) {
       throw new Error('缺少必要参数：amount 或 currency');
     }
 
-    // 检查是否处于演示模式
-    const isDemo = !config.API_KEY || !config.CLIENT_ID;
-    if (isDemo) {
-      console.log('注意：API配置不完整，使用演示模式');
-      return _getDemoPaymentIntent(paymentData);
+    // 验证API配置
+    if (!config.CLIENT_ID || !config.API_KEY) {
+      throw new Error('API配置不完整，无法创建支付意图');
     }
 
     // 获取令牌
@@ -114,14 +94,14 @@ async function createPaymentIntent(paymentData, config) {
       request_id: requestId,
       order: {
         products: [{
-          name: '高级会员',
+          name: 'AI行程高级会员',
           desc: '月度订阅服务',
           quantity: 1,
           unit_price: paymentData.amount,
           currency: paymentData.currency,
         }]
       },
-      return_url: `${paymentData.returnUrl || 'http://localhost:3001'}/payment-success.html`
+      return_url: `${paymentData.returnUrl || window.location.origin || 'https://aixingcheng.pages.dev'}/payment-success.html`
     };
 
     console.log('发送创建支付意图请求，数据:', JSON.stringify(requestData));
@@ -141,28 +121,8 @@ async function createPaymentIntent(paymentData, config) {
     return response.data;
   } catch (error) {
     console.error('创建支付意图错误:', error.response?.data || error.message);
-    // 在API调用失败时返回一个模拟的支付意图以便前端测试
-    return _getDemoPaymentIntent(paymentData);
+    throw new Error(`创建支付意图失败: ${error.response?.data?.message || error.message}`);
   }
-}
-
-/**
- * 获取演示模式的支付意图
- * @private
- * @param {Object} paymentData 支付数据
- * @returns {Object} 模拟的支付意图
- */
-function _getDemoPaymentIntent(paymentData) {
-  console.log('生成模拟的支付意图以供测试');
-  return {
-    id: 'demo_' + Math.random().toString(36).substring(2, 15),
-    client_secret: 'demo_secret_' + Math.random().toString(36).substring(2, 10),
-    amount: paymentData.amount,
-    currency: paymentData.currency,
-    status: 'REQUIRES_PAYMENT_METHOD',
-    next_action: null,
-    demo_mode: true
-  };
 }
 
 /**
@@ -177,16 +137,9 @@ async function getPaymentIntent(intentId, config) {
       throw new Error('缺少支付意图ID');
     }
 
-    // 如果是演示模式的ID或API配置不完整，返回模拟数据
-    if (intentId.startsWith('demo_') || !config.API_KEY || !config.CLIENT_ID) {
-      return {
-        id: intentId,
-        amount: 99.00,
-        currency: 'CNY',
-        status: 'SUCCEEDED',
-        created_at: new Date().toISOString(),
-        demo_mode: true
-      };
+    // 验证API配置
+    if (!config.CLIENT_ID || !config.API_KEY) {
+      throw new Error('API配置不完整，无法查询支付意图');
     }
 
     const token = await getApiToken(config);
@@ -227,6 +180,11 @@ async function confirmPaymentIntent(paymentData, config) {
       throw new Error('缺少支付方式');
     }
 
+    // 验证API配置
+    if (!config.CLIENT_ID || !config.API_KEY) {
+      throw new Error('API配置不完整，无法确认支付');
+    }
+
     // 获取令牌
     const token = await getApiToken(config);
     
@@ -261,6 +219,8 @@ async function confirmPaymentIntent(paymentData, config) {
         }
         break;
     }
+
+    console.log('发送确认支付请求，数据:', JSON.stringify(requestData));
 
     // 发送请求
     const response = await axios({
