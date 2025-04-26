@@ -121,6 +121,15 @@ function bindPaymentFormSubmission() {
         case 'googlepay':
           await handleGooglePayPayment();
           break;
+        case 'paypal':
+          await handlePayPalPayment();
+          break;
+        case 'applepay':
+          await handleApplePayPayment();
+          break;
+        case 'unionpay':
+          await handleUnionPayPayment();
+          break;
         default:
           throw new Error('不支持的支付方式');
       }
@@ -245,6 +254,108 @@ async function handleGooglePayPayment() {
     // 显示演示提示
     showError('Google Pay支付功能正在开发中...');
     throw new Error('Google Pay支付功能暂未完全实现');
+  }
+}
+
+/**
+ * 处理PayPal支付
+ */
+async function handlePayPalPayment() {
+  // 构建支付参数
+  const paymentParams = {
+    intent_id: paymentIntent.id,
+    payment_method: 'paypal',
+    payment_method_options: {
+      paypal: {
+        return_url: window.location.origin + '/payment-return'
+      }
+    }
+  };
+  
+  // 确认支付
+  try {
+    console.log('处理PayPal支付...');
+    const result = await confirmPayment(paymentParams);
+    
+    if (result.success && result.redirect_url) {
+      // 跳转到PayPal付款页面
+      window.location.href = result.redirect_url;
+    } else {
+      throw new Error(result.error || 'PayPal支付初始化失败，请重试');
+    }
+  } catch (error) {
+    console.error('PayPal支付失败:', error);
+    // 显示演示提示
+    showError('PayPal支付功能正在开发中...');
+    throw new Error('PayPal支付功能暂未完全实现');
+  }
+}
+
+/**
+ * 处理Apple Pay支付
+ */
+async function handleApplePayPayment() {
+  // 构建支付参数
+  const paymentParams = {
+    intent_id: paymentIntent.id,
+    payment_method: 'applepay',
+    payment_method_options: {
+      applepay: {
+        return_url: window.location.origin + '/payment-return'
+      }
+    }
+  };
+  
+  // 确认支付
+  try {
+    console.log('处理Apple Pay支付...');
+    const result = await confirmPayment(paymentParams);
+    
+    if (result.success && result.redirect_url) {
+      // 跳转到Apple Pay付款页面
+      window.location.href = result.redirect_url;
+    } else {
+      throw new Error(result.error || 'Apple Pay支付初始化失败，请重试');
+    }
+  } catch (error) {
+    console.error('Apple Pay支付失败:', error);
+    // 显示演示提示
+    showError('Apple Pay支付功能正在开发中...');
+    throw new Error('Apple Pay支付功能暂未完全实现');
+  }
+}
+
+/**
+ * 处理银联支付
+ */
+async function handleUnionPayPayment() {
+  // 构建支付参数
+  const paymentParams = {
+    intent_id: paymentIntent.id,
+    payment_method: 'unionpay',
+    payment_method_options: {
+      unionpay: {
+        return_url: window.location.origin + '/payment-return'
+      }
+    }
+  };
+  
+  // 确认支付
+  try {
+    console.log('处理银联支付...');
+    const result = await confirmPayment(paymentParams);
+    
+    if (result.success && result.redirect_url) {
+      // 跳转到银联付款页面
+      window.location.href = result.redirect_url;
+    } else {
+      throw new Error(result.error || '银联支付初始化失败，请重试');
+    }
+  } catch (error) {
+    console.error('银联支付失败:', error);
+    // 显示演示提示
+    showError('银联支付功能正在开发中...');
+    throw new Error('银联支付功能暂未完全实现');
   }
 }
 
@@ -429,5 +540,8 @@ export {
   handleCardPayment,
   handleAlipayPayment,
   handleWechatPayment,
-  handleGooglePayPayment
+  handleGooglePayPayment,
+  handlePayPalPayment,
+  handleApplePayPayment,
+  handleUnionPayPayment
 }; 
