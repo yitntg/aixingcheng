@@ -4,11 +4,11 @@
 
 // 配置信息
 const config = {
-  env: 'demo', // 'demo'或'prod'环境
+  env: 'prod', // 'demo'或'prod'环境
   origin: window.location.origin,
   locale: 'zh',
   currency: 'CNY',
-  amount: 0.1, // 订阅金额 - 修改为0.1元用于测试
+  amount: 199.00, // 订阅金额 - 真实订阅价格
 }
 
 // Airwallex实例
@@ -47,35 +47,25 @@ async function initAirwallex() {
 
 /**
  * 获取支付意图
- * 注意：实际应用中应该从后端获取支付意图
  */
 async function getPaymentIntent() {
   try {
-    // 模拟从服务器获取支付意图
-    // 在实际应用中，应该通过API请求从服务器获取
-    // const response = await fetch('/api/create-payment-intent', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ 
-    //     amount: config.amount,
-    //     currency: config.currency 
-    //   })
-    // });
-    // 
-    // if (!response.ok) {
-    //   throw new Error('创建支付意图失败');
-    // }
-    // 
-    // paymentIntent = await response.json();
+    // 从服务器获取支付意图
+    const response = await fetch('/api/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        amount: config.amount,
+        currency: config.currency,
+        description: 'AI行程规划会员月度订阅'
+      })
+    });
     
-    // 模拟支付意图（仅供演示）
-    paymentIntent = {
-      id: 'demo_' + Math.random().toString(36).substring(2, 15),
-      client_secret: 'demo_secret_' + Math.random().toString(36).substring(2, 15),
-      amount: config.amount,
-      currency: config.currency,
-    };
+    if (!response.ok) {
+      throw new Error('创建支付意图失败：' + response.statusText);
+    }
     
+    paymentIntent = await response.json();
     console.log('获取支付意图成功:', paymentIntent.id);
     
   } catch (error) {

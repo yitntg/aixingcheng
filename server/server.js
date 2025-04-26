@@ -15,9 +15,9 @@ const PORT = process.env.PORT || 3000;
 
 // Airwallex API配置
 const AIRWALLEX_API = {
-  CLIENT_ID: process.env.AIRWALLEX_CLIENT_ID || 'C8VXbgIDQO-i8Cr8G3IiFQ', // 测试环境使用
-  API_KEY: process.env.AIRWALLEX_API_KEY || '', // 应从环境变量获取
-  API_BASE: process.env.AIRWALLEX_API_BASE || 'https://api-demo.airwallex.com', // 演示环境
+  CLIENT_ID: process.env.AIRWALLEX_CLIENT_ID || '', // 从环境变量获取
+  API_KEY: process.env.AIRWALLEX_API_KEY || '', // 从环境变量获取
+  API_BASE: process.env.AIRWALLEX_API_BASE || 'https://api.airwallex.com', // 生产环境
 };
 
 // 中间件

@@ -45,7 +45,7 @@ async function init() {
     
     // 创建支付意图
     paymentIntent = await AirwallexApi.createPaymentIntent({
-      amount: 0.1,
+      amount: 199.00,
       currency: 'CNY',
       description: 'AI行程规划会员月度订阅'
     });

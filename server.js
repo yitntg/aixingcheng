@@ -15,14 +15,14 @@ const PORT = process.env.PORT || 3001;
 // Airwallex API配置 - 使用环境变量
 const AIRWALLEX_API = {
   CLIENT_ID: process.env.AIRWALLEX_CLIENT_ID || '', // 从环境变量获取
-  API_KEY: process.env.AIRWALLEX_API_KEY || '', // 从环境变量获取，不再使用硬编码备用值
-  API_BASE: process.env.AIRWALLEX_API_BASE || 'https://api-demo.airwallex.com', // 演示环境
+  API_KEY: process.env.AIRWALLEX_API_KEY || '', // 从环境变量获取
+  API_BASE: process.env.AIRWALLEX_API_BASE || 'https://api.airwallex.com', // 生产环境API地址
 };
 
 // 中间件
-app.use(express.json());
 app.use(cors());
-app.use(express.static(path.join(__dirname)));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '.'))); // 提供静态文件
 
 // 导入Airwallex支付处理逻辑
 const { getApiToken, createPaymentIntent, getPaymentIntent } = require('./server/payment-logic');

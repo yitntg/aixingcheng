@@ -23,7 +23,7 @@ function initAirwallex() {
   if (window.Airwallex) {
     Airwallex = window.Airwallex;
     Airwallex.loadAirwallex({
-      env: 'demo', // 可选值: 'sandbox', 'demo', 'prod'
+      env: 'prod', // 可选值: 'sandbox', 'demo', 'prod'
       origin: window.location.origin, // 用于验证的域名
     }).then(() => {
       console.log('Airwallex SDK初始化成功');

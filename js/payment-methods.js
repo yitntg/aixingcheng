@@ -609,20 +609,26 @@ function startWechatPaymentStatusCheck(intentId) {
 }
 
 /**
- * 设置测试数据 - 仅用于开发环境
+ * 设置测试数据 - 仅在开发环境和明确启用时使用
+ * @param {boolean} forceEnable - 是否强制启用测试数据
  */
-function setupTestData() {
+function setupTestData(forceEnable = false) {
   // 检查是否为开发环境
   const isDev = window.location.hostname === 'localhost' || 
                 window.location.hostname === '127.0.0.1' ||
                 window.location.hostname.includes('.local');
   
-  if (!isDev) {
-    console.log('非开发环境，跳过测试数据设置');
+  if (!isDev && !forceEnable) {
+    console.log('非开发环境或未强制启用，跳过测试数据设置');
     return;
   }
   
-  console.log('开发环境，设置测试数据');
+  // 仅在开发环境或明确启用时设置测试数据
+  if (forceEnable) {
+    console.log('强制启用测试数据');
+  } else {
+    console.log('开发环境，设置测试数据');
+  }
   
   // 设置测试数据
   const testCardInfo = {
@@ -656,16 +662,6 @@ function setupTestData() {
   if (cardNameInput) {
     console.log('填充持卡人姓名测试数据');
     cardNameInput.value = testCardInfo.name;
-  }
-  
-  // 创建测试订单总价元素（如果不存在）
-  if (!document.getElementById('order-total')) {
-    console.log('创建测试订单总价元素');
-    const orderTotalElement = document.createElement('div');
-    orderTotalElement.id = 'order-total';
-    orderTotalElement.textContent = '¥199.00';
-    orderTotalElement.style.display = 'none';
-    document.body.appendChild(orderTotalElement);
   }
 }
 

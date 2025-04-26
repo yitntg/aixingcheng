@@ -9,9 +9,9 @@ let elementInstances = {}; // 存储已创建的元素实例
 
 // Airwallex SDK 配置
 const AIRWALLEX_CONFIG = {
-  env: 'demo', // 环境: 'demo', 'prod'
+  env: 'prod', // 环境: 'demo', 'prod'
   origin: window.location.origin, // 用于验证的域名
-  apiKey: 'YOUR_AIRWALLEX_API_KEY' // 替换为实际的API Key
+  // apiKey从环境变量中获取，不在前端直接设置
 };
 
 /**
@@ -72,29 +72,22 @@ async function loadAirwallexSDK() {
  */
 async function createPaymentIntent(data) {
   try {
-    // 实际环境中，这个请求应该发送到您的后端服务器
-    // 后端服务器将使用您的Airwallex API密钥创建支付意图
-    // 这里使用模拟数据进行演示
-    
-    // 模拟后端API调用
+    // 调用后端API创建支付意图
+    const apiUrl = '/api/create-payment-intent';
     console.log('创建支付意图:', data);
     
-    // 实际项目中，这里应该调用您的后端API
-    // const response = await fetch('/api/create-payment-intent', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(data)
-    // });
-    // return await response.json();
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
     
-    // 模拟数据(开发/测试环境)
-    return {
-      id: 'int_' + generateRandomId(),
-      client_secret: 'sec_' + generateRandomId(),
-      amount: data.amount,
-      currency: data.currency,
-      status: 'REQUIRES_PAYMENT_METHOD'
-    };
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || '创建支付订单失败，请重试');
+    }
+    
+    return await response.json();
   } catch (error) {
     console.error('创建支付意图失败:', error);
     throw new Error('创建支付订单失败，请重试');

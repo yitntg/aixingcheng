@@ -24,7 +24,7 @@ async function initPaymentModule() {
     
     // 创建支付意向
     paymentIntent = await createPaymentIntent({
-      amount: 0.1, // 修改为0.1元用于测试
+      amount: 199.00, // 真实订阅价格
       currency: 'CNY',
       description: 'AI行程规划会员月度订阅'
     });
