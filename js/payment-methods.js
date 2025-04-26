@@ -83,6 +83,12 @@ function handleSpecialPaymentMethods(method) {
     }
   });
   
+  // 隐藏所有二维码显示
+  const qrCodeElement = document.getElementById('wechat-qrcode');
+  if (qrCodeElement) {
+    qrCodeElement.style.display = 'none';
+  }
+  
   // 根据支付方式执行特殊逻辑
   switch(method) {
     case 'applepay':
@@ -96,6 +102,9 @@ function handleSpecialPaymentMethods(method) {
         document.getElementById('apple-pay-button').style.display = 'flex';
         showError('提示：此为演示环境。实际生产环境中，只有在支持Apple Pay的设备上才会显示此按钮。');
       }
+      
+      // 隐藏主支付按钮，使用Apple Pay按钮
+      paymentButton.style.display = 'none';
       break;
       
     case 'googlepay':
@@ -110,6 +119,9 @@ function handleSpecialPaymentMethods(method) {
         document.getElementById('google-pay-button').style.display = 'flex';
         showError('提示：此为演示环境。实际生产环境中，只有在支持Google Pay的设备上才会显示此按钮。');
       }
+      
+      // 隐藏主支付按钮，使用Google Pay按钮
+      paymentButton.style.display = 'none';
       break;
       
     case 'paypal':
@@ -120,9 +132,19 @@ function handleSpecialPaymentMethods(method) {
       const paypalButton = document.getElementById('paypal-button');
       if (paypalButton) {
         paypalButton.addEventListener('click', function() {
-          document.getElementById('payment-button').click();
+          // 显示加载动画
+          this.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 10px;"></i> 正在连接PayPal...';
+          
+          // 模拟处理过程
+          setTimeout(() => {
+            // 跳转到模拟的PayPal页面
+            simulatePayPalRedirect();
+          }, 1500);
         });
       }
+      
+      // 隐藏主支付按钮，使用PayPal按钮
+      paymentButton.style.display = 'none';
       break;
       
     case 'wechat':
@@ -132,9 +154,26 @@ function handleSpecialPaymentMethods(method) {
         const wechatButton = document.createElement('div');
         wechatButton.id = 'wechat-pay-button';
         wechatButton.style = 'width: 100%; height: 50px; border-radius: 5px; background-color: #07C160; display: flex; justify-content: center; align-items: center; color: white; margin-bottom: 20px; cursor: pointer;';
-        wechatButton.innerHTML = '<i class="fab fa-weixin" style="margin-right: 10px;"></i> 微信支付';
+        wechatButton.innerHTML = '<i class="fab fa-weixin" style="margin-right: 10px;"></i> 微信扫码支付';
         wechatButton.addEventListener('click', function() {
-          document.getElementById('payment-button').click();
+          // 显示加载动画，替换按钮文本
+          this.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 10px;"></i> 正在生成支付二维码...';
+          
+          // 模拟加载二维码
+          setTimeout(() => {
+            // 显示二维码区域
+            const qrCode = document.getElementById('wechat-qrcode');
+            if (qrCode) {
+              qrCode.style.display = 'flex';
+              
+              // 更新按钮状态和文本
+              this.innerHTML = '<i class="fab fa-weixin" style="margin-right: 10px;"></i> 请使用微信扫描二维码';
+              this.style.backgroundColor = '#999';
+              
+              // 添加模拟付款成功的计时器
+              simulateWechatPayment();
+            }
+          }, 1500);
         });
         
         // 添加模拟的二维码图像
@@ -146,6 +185,9 @@ function handleSpecialPaymentMethods(method) {
         wechatForm.querySelector('.form-group').appendChild(qrCode);
         wechatForm.querySelector('.form-group').appendChild(wechatButton);
       }
+      
+      // 隐藏主支付按钮，使用微信支付按钮
+      paymentButton.style.display = 'none';
       break;
       
     case 'alipay':
@@ -157,10 +199,20 @@ function handleSpecialPaymentMethods(method) {
         alipayButton.style = 'width: 100%; height: 50px; border-radius: 5px; background-color: #1677FF; display: flex; justify-content: center; align-items: center; color: white; margin-bottom: 20px; cursor: pointer;';
         alipayButton.innerHTML = '<i class="fab fa-alipay" style="margin-right: 10px;"></i> 支付宝支付';
         alipayButton.addEventListener('click', function() {
-          document.getElementById('payment-button').click();
+          // 显示加载动画
+          this.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 10px;"></i> 正在跳转至支付宝...';
+          
+          // 模拟处理过程
+          setTimeout(() => {
+            // 跳转到模拟的支付宝页面
+            simulateAlipayRedirect();
+          }, 1500);
         });
         alipayForm.querySelector('.form-group').appendChild(alipayButton);
       }
+      
+      // 隐藏主支付按钮，使用支付宝按钮
+      paymentButton.style.display = 'none';
       break;
       
     case 'unionpay':
@@ -172,11 +224,287 @@ function handleSpecialPaymentMethods(method) {
         unionpayButton.style = 'width: 100%; height: 50px; border-radius: 5px; background-color: #CF2D28; display: flex; justify-content: center; align-items: center; color: white; margin-bottom: 20px; cursor: pointer;';
         unionpayButton.innerHTML = '<i class="fas fa-credit-card" style="margin-right: 10px;"></i> 银联支付';
         unionpayButton.addEventListener('click', function() {
-          document.getElementById('payment-button').click();
+          // 显示加载动画
+          this.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 10px;"></i> 正在连接银联支付...';
+          
+          // 模拟处理过程
+          setTimeout(() => {
+            // 跳转到模拟的银联页面
+            simulateUnionPayRedirect();
+          }, 1500);
         });
         unionpayForm.querySelector('.form-group').appendChild(unionpayButton);
       }
+      
+      // 隐藏主支付按钮，使用银联按钮
+      paymentButton.style.display = 'none';
       break;
+  }
+}
+
+/**
+ * 模拟微信支付过程
+ */
+function simulateWechatPayment() {
+  // 添加状态提示
+  const statusDiv = document.createElement('div');
+  statusDiv.style = 'text-align: center; margin-top: 10px; color: #666;';
+  statusDiv.id = 'wechat-status';
+  statusDiv.innerHTML = '等待用户扫码支付...';
+  
+  const qrCode = document.getElementById('wechat-qrcode');
+  const wechatForm = document.getElementById('wechat-form');
+  
+  if (qrCode && wechatForm && !document.getElementById('wechat-status')) {
+    wechatForm.querySelector('.form-group').insertBefore(statusDiv, document.getElementById('wechat-pay-button'));
+    
+    // 模拟支付流程
+    setTimeout(() => {
+      statusDiv.innerHTML = '用户已扫码，等待支付确认...';
+      statusDiv.style.color = '#07C160';
+      
+      setTimeout(() => {
+        statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> 支付成功！正在跳转...';
+        
+        // 显示成功信息
+        showSuccess('微信支付成功！正在为您处理订单...');
+        
+        // 跳转到成功页面
+        setTimeout(() => {
+          simulateSuccessRedirect();
+        }, 2000);
+      }, 3000);
+    }, 2000);
+  }
+}
+
+/**
+ * 模拟支付宝重定向
+ */
+function simulateAlipayRedirect() {
+  // 创建模拟页面或直接显示成功
+  const paymentContainer = document.querySelector('.payment-container');
+  
+  if (paymentContainer) {
+    // 保存原内容
+    const originalContent = paymentContainer.innerHTML;
+    
+    // 替换为支付宝界面
+    paymentContainer.innerHTML = `
+      <div style="text-align: center; padding: 40px 20px;">
+        <img src="https://cdn.jsdelivr.net/gh/krystalzcx/hpoi-image/payment/alipay-logo.png" alt="支付宝" style="height: 60px; margin-bottom: 30px;">
+        <h2 style="margin-bottom: 20px; color: #1677FF;">支付宝付款</h2>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+          <p>商品名称：AI行程规划会员订阅</p>
+          <p>支付金额：<span style="font-size: 24px; color: #1677FF; font-weight: bold;">¥0.10</span></p>
+        </div>
+        <div id="alipay-sim-button" style="width: 200px; height: 50px; background-color: #1677FF; color: white; line-height: 50px; border-radius: 25px; margin: 0 auto; cursor: pointer;">
+          确认支付
+        </div>
+        <p style="margin-top: 20px; font-size: 14px; color: #999;">请在支付宝完成支付</p>
+      </div>
+    `;
+    
+    // 添加模拟按钮事件
+    setTimeout(() => {
+      const simButton = document.getElementById('alipay-sim-button');
+      if (simButton) {
+        simButton.addEventListener('click', function() {
+          this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+          
+          setTimeout(() => {
+            // 恢复原内容
+            paymentContainer.innerHTML = originalContent;
+            
+            // 显示成功信息
+            const errorElement = document.getElementById('error-message');
+            if (errorElement) {
+              errorElement.textContent = '支付宝支付成功！正在为您处理订单...';
+              errorElement.style.display = 'block';
+              errorElement.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
+              errorElement.style.color = 'var(--success-color)';
+              
+              // 重新初始化
+              setupPaymentMethodSwitcher();
+              setupTestData();
+              setupApplePayButton();
+              setupGooglePayButton();
+              
+              // 模拟跳转
+              setTimeout(() => {
+                simulateSuccessRedirect();
+              }, 2000);
+            }
+          }, 1500);
+        });
+      }
+    }, 100);
+  }
+}
+
+/**
+ * 模拟PayPal重定向
+ */
+function simulatePayPalRedirect() {
+  // 创建模拟页面或直接显示成功
+  const paymentContainer = document.querySelector('.payment-container');
+  
+  if (paymentContainer) {
+    // 保存原内容
+    const originalContent = paymentContainer.innerHTML;
+    
+    // 替换为PayPal界面
+    paymentContainer.innerHTML = `
+      <div style="text-align: center; padding: 40px 20px;">
+        <img src="https://cdn.jsdelivr.net/gh/krystalzcx/hpoi-image/payment/paypal-logo.png" alt="PayPal" style="height: 60px; margin-bottom: 30px;">
+        <h2 style="margin-bottom: 20px; color: #0070BA;">PayPal 付款</h2>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+          <p>商品名称：AI行程规划会员订阅</p>
+          <p>支付金额：<span style="font-size: 24px; color: #0070BA; font-weight: bold;">¥0.10</span></p>
+        </div>
+        <div id="paypal-sim-button" style="width: 200px; height: 50px; background-color: #0070BA; color: white; line-height: 50px; border-radius: 25px; margin: 0 auto; cursor: pointer;">
+          确认支付
+        </div>
+        <p style="margin-top: 20px; font-size: 14px; color: #999;">请在PayPal完成支付</p>
+      </div>
+    `;
+    
+    // 添加模拟按钮事件
+    setTimeout(() => {
+      const simButton = document.getElementById('paypal-sim-button');
+      if (simButton) {
+        simButton.addEventListener('click', function() {
+          this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+          
+          setTimeout(() => {
+            // 恢复原内容
+            paymentContainer.innerHTML = originalContent;
+            
+            // 显示成功信息
+            const errorElement = document.getElementById('error-message');
+            if (errorElement) {
+              errorElement.textContent = 'PayPal支付成功！正在为您处理订单...';
+              errorElement.style.display = 'block';
+              errorElement.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
+              errorElement.style.color = 'var(--success-color)';
+              
+              // 重新初始化
+              setupPaymentMethodSwitcher();
+              setupTestData();
+              setupApplePayButton();
+              setupGooglePayButton();
+              
+              // 模拟跳转
+              setTimeout(() => {
+                simulateSuccessRedirect();
+              }, 2000);
+            }
+          }, 1500);
+        });
+      }
+    }, 100);
+  }
+}
+
+/**
+ * 模拟银联支付重定向
+ */
+function simulateUnionPayRedirect() {
+  // 创建模拟页面或直接显示成功
+  const paymentContainer = document.querySelector('.payment-container');
+  
+  if (paymentContainer) {
+    // 保存原内容
+    const originalContent = paymentContainer.innerHTML;
+    
+    // 替换为银联界面
+    paymentContainer.innerHTML = `
+      <div style="text-align: center; padding: 40px 20px;">
+        <img src="https://cdn.jsdelivr.net/gh/krystalzcx/hpoi-image/payment/unionpay-logo.png" alt="银联" style="height: 60px; margin-bottom: 30px;">
+        <h2 style="margin-bottom: 20px; color: #CF2D28;">银联在线支付</h2>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+          <p>商品名称：AI行程规划会员订阅</p>
+          <p>支付金额：<span style="font-size: 24px; color: #CF2D28; font-weight: bold;">¥0.10</span></p>
+        </div>
+        
+        <div style="margin: 20px auto; width: 300px; text-align: left;">
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px;">银行卡号</label>
+            <input type="text" placeholder="请输入银行卡号" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px;">持卡人姓名</label>
+            <input type="text" placeholder="请输入持卡人姓名" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px;">手机号码</label>
+            <input type="text" placeholder="请输入手机号" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+        
+        <div id="unionpay-sim-button" style="width: 200px; height: 50px; background-color: #CF2D28; color: white; line-height: 50px; border-radius: 25px; margin: 0 auto; cursor: pointer;">
+          确认支付
+        </div>
+        <p style="margin-top: 20px; font-size: 14px; color: #999;">请确保输入信息准确无误</p>
+      </div>
+    `;
+    
+    // 添加模拟按钮事件
+    setTimeout(() => {
+      const simButton = document.getElementById('unionpay-sim-button');
+      if (simButton) {
+        simButton.addEventListener('click', function() {
+          this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+          
+          setTimeout(() => {
+            // 恢复原内容
+            paymentContainer.innerHTML = originalContent;
+            
+            // 显示成功信息
+            const errorElement = document.getElementById('error-message');
+            if (errorElement) {
+              errorElement.textContent = '银联支付成功！正在为您处理订单...';
+              errorElement.style.display = 'block';
+              errorElement.style.backgroundColor = 'rgba(52, 211, 153, 0.1)';
+              errorElement.style.color = 'var(--success-color)';
+              
+              // 重新初始化
+              setupPaymentMethodSwitcher();
+              setupTestData();
+              setupApplePayButton();
+              setupGooglePayButton();
+              
+              // 模拟跳转
+              setTimeout(() => {
+                simulateSuccessRedirect();
+              }, 2000);
+            }
+          }, 1500);
+        });
+      }
+    }, 100);
+  }
+}
+
+/**
+ * 模拟支付成功跳转
+ */
+function simulateSuccessRedirect() {
+  // 创建支付成功页面
+  const contentElem = document.body;
+  
+  if (contentElem) {
+    contentElem.innerHTML = `
+      <div style="max-width: 600px; margin: 100px auto; text-align: center; padding: 40px; background-color: white; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div style="font-size: 80px; color: #2ecc71; margin-bottom: 30px;">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <h1 style="font-size: 28px; margin-bottom: 20px; color: #333;">支付成功！</h1>
+        <p style="font-size: 16px; color: #666; margin-bottom: 30px;">您的AI行程规划会员订阅已激活</p>
+        <p style="color: #999; margin-bottom: 30px;">订单号: AI${Date.now().toString().substring(5)}</p>
+        <a href="/" style="display: inline-block; padding: 12px 30px; background-color: #3498db; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">返回首页</a>
+      </div>
+    `;
   }
 }
 
